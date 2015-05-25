@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2014.08.06
+// @version     2015.05.25
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -18,46 +18,43 @@
 // ==/UserScript==
 "use strict";
 
-function _Type(value){
-	var type = Object.prototype.toString.call(value);
+function _Type(v){
+	var type = Object.prototype.toString.call(v);
 	return type.slice(8,type.length-1);
 	}
-	
-function _Exist(value){
-	return _Type(value)!='Undefined';
+function _Exist(v){
+	return _Type(v)!='Undefined';
 	}
-
 String.prototype.truncate = function(length){
 	if (this.length > length) return this.slice(0, length - 3) + "...";
 	else return this;
 	};
-
 /******************************************************
 * OBJET JSONS - JSON
 * - stringification des données
 ******************************************************/
 var JSONS = (function(){
-	function reviver(key,value){
-		if (_Type(value)=='String'){
-			var a = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(value);
+	function reviver(key,v){
+		if (_Type(v)=='String'){
+			var a = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(v);
 			if (a!=null) return new Date(Date.UTC(+a[1],+a[2]-1,+a[3],+a[4],+a[5],+a[6]));
 			}
-		return value;
+		return v;
 		}
 	return {
-		_Decode: function(value){
-			var result = null;
+		_Decode: function(v){
+			var r = null;
 			try	{
-				result = JSON.parse(value,reviver);
+				r = JSON.parse(v,reviver);
 				}
 			catch(e){
-				console.error('JSONS_Decode error :',value,e);
+				console.error('JSONS_Decode error :',v,e);
 				}
-			return result;
+			return r;
 			},
 
-		_Encode: function(value){
-			return JSON.stringify(value);
+		_Encode: function(v){
+			return JSON.stringify(v);
 			}
 		};
 	})();
@@ -71,12 +68,12 @@ var LS = (function(){
 	var LS = window.localStorage;
 	return {
 		_GetVar: function(key,defaut){
-			var value = LS.getItem(key); // if key does not exist return null 
-			return ((value!=null)?JSONS._Decode(value):defaut);
+			var v = LS.getItem(key); // if key does not exist return null 
+			return ((v!=null)?JSONS._Decode(v):defaut);
 			},
-		_SetVar: function(key,value){
-			LS.setItem(key,JSONS._Encode(value));
-			return value;
+		_SetVar: function(key,v){
+			LS.setItem(key,JSONS._Encode(v));
+			return v;
 			}
 		};
 	})();
@@ -89,24 +86,20 @@ var LS = (function(){
 var DOM = (function(){
 	return {
 		_GetNodes: function(path,root){
-			var contextNode=(_Exist(root)&&root!=null)?root:document;
-			var result=document.evaluate(path, contextNode, null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
-			return result;
+			return (_Exist(root)&&root==null)?null:document.evaluate(path,(_Exist(root)?root:document), null,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
 			},
 		_GetFirstNode: function(path,root){
-			var result = this._GetNodes(path,root);
-			return ((result.snapshotLength >= 1)?result.snapshotItem(0):null);
+			var r = this._GetNodes(path,root);
+			return (r!=null&&r.snapshotLength>=1?r.snapshotItem(0):null);
 			},
 		_GetFirstNodeTextContent: function(path,defaultValue,root){
-			var result = this._GetFirstNode(path,root);
-			return (((result!=null)&&(result.textContent!=null))?result.textContent:defaultValue);
+			var r = this._GetFirstNode(path,root);
+			return (r!=null&&r.textContent!=null?r.textContent:defaultValue);
 			},
 		_GetFirstNodeInnerHTML: function(path,defaultValue,root){
-			var result = this._GetFirstNode(path,root);
-			return (((result!=null)&&(result.innerHTML!=null))?result.innerHTML:defaultValue);
+			var r = this._GetFirstNode(path,root);
+			return (r!=null&&r.innerHTML!=null?r.innerHTML:defaultValue);
 			},
-		// retourne la valeur de la clé "key" trouvé dans l'url
-		// null: n'existe pas, true: clé existe mais sans valeur, autres: valeur
 		_QueryString: function(key){
 			var url = window.location.search,
 				reg = new RegExp("[\?&]"+key+"(=([^&$]+)|)(&|$)","i"),
@@ -127,16 +120,16 @@ var IU = (function(){
 		// reçoit une liste d'éléments pour créér l'interface
 		// ex: {'name':['input',{'type':'checkbox','checked':true},['coucou'],{'click':[funcname,5]},body]
 		_CreateElements: function(list){
-			var result = {};
+			var r = {};
 			for (var key in list){
 				var type = _Exist(list[key][0])?list[key][0]:null,
 					attributes = _Exist(list[key][1])?list[key][1]:{},
 					content = _Exist(list[key][2])?list[key][2]:[],
 					events = _Exist(list[key][3])?list[key][3]:{},
-					node = _Exist(result[list[key][4]])?result[list[key][4]]:(_Exist(list[key][4])?list[key][4]:null);
-				if (type!=null) result[key] = this._CreateElement(type,attributes,content,events,node);
+					node = _Exist(r[list[key][4]])?r[list[key][4]]:(_Exist(list[key][4])?list[key][4]:null);
+				if (type!=null) r[key] = this._CreateElement(type,attributes,content,events,node);
 				}
-			return result;
+			return r;
 			},
 		_CreateElement: function(type,attributes,content,events,node){
 			if (_Exist(type)&&type!=null){
@@ -144,20 +137,20 @@ var IU = (function(){
 				content = _Exist(content)?content:[];
 				events = _Exist(events)?events:{};
 				node = _Exist(node)?node:null;
-				var result = document.createElement(type);
+				var r = document.createElement(type);
 				for (var key in attributes){
-					if (_Type(attributes[key])!='Boolean') result.setAttribute(key,attributes[key]);
-					else if (attributes[key]==true) result.setAttribute(key,key.toString());
+					if (_Type(attributes[key])!='Boolean') r.setAttribute(key,attributes[key]);
+					else if (attributes[key]==true) r.setAttribute(key,key.toString());
 					}
 				for (var key in events){
-					this._addEvent(result,key,events[key][0],events[key][1]);
+					this._addEvent(r,key,events[key][0],events[key][1]);
 					}
 				for (var i=0; i<content.length; i++){
-					if (_Type(content[i])==='Object') result.appendChild(content[i]);
-					else result.textContent+= content[i];
+					if (_Type(content[i])==='Object') r.appendChild(content[i]);
+					else r.textContent+= content[i];
 					}
-				if (node!=null) node.appendChild(result);
-				return result;
+				if (node!=null) node.appendChild(r);
+				return r;
 				}
 			else return null;
 			},
@@ -247,15 +240,15 @@ var L = (function(){
 		// ex: "test": ["<b>$2<\/b> a tué $1 avec $3.",]
 		// L._Get('test','Dr Moutarde','Mlle Rose','le chandelier'); => "<b>Mlle Rose<\/b> a tué le Dr Moutarde avec le chandelier."
 		_Get: function(key){
-			var result = locStr[key];
-			if (!_Exist(result)) throw new Error("L::Error:: la clé n'existe pas : "+key);
-			if (_Exist(result[langue])) result = result[langue];
-			else result = result[0];
+			var r = locStr[key];
+			if (!_Exist(r)) throw new Error("L::Error:: la clé n'existe pas : "+key);
+			if (_Exist(r[langue])) r = r[langue];
+			else r = r[0];
 			for (var i=arguments.length-1;i>=1;i--){
 				var reg = new RegExp("\\$"+i,"g");
-				result = result.replace(reg,arguments[i]);
+				r = r.replace(reg,arguments[i]);
 				}
-			return result;
+			return r;
 			}
 		};
 	})();
@@ -268,9 +261,9 @@ var DATAS = (function(){
 	// pour _Time()
 	var timeDiff = null,
 		stTime = new Date(),
-		result = DOM._GetFirstNodeInnerHTML("/html/body/script",null),
-		result2 = /var timeDiff = ([0-9]+) - Math\.floor\(stTime\.getTime\(\)\/1000\) \+ ([0-9]+) \+ stTime\.getTimezoneOffset\(\)\*60;/.exec(result);
-	if (result2!=null) timeDiff = parseInt(result2[1]) - Math.floor(stTime.getTime()/1000) + parseInt(result2[2]) + stTime.getTimezoneOffset()*60;
+		r = DOM._GetFirstNodeInnerHTML("/html/body/script",null),
+		r2 = /var timeDiff = ([0-9]+) - Math\.floor\(stTime\.getTime\(\)\/1000\) \+ ([0-9]+) \+ stTime\.getTimezoneOffset\(\)\*60;/.exec(r);
+	if (r2!=null) timeDiff = parseInt(r2[1]) - Math.floor(stTime.getTime()/1000) + parseInt(r2[2]) + stTime.getTimezoneOffset()*60;
 	return {
 	/* données du serveur */
 		_Time: function(){
@@ -286,14 +279,14 @@ var DATAS = (function(){
 			},
 	/* Données diverses	*/
 		_GetPage: function(){
-			var page = 'null',
+			var p = 'null',
 			// message Serveur (à approfondir)
-				result = DOM._GetFirstNode("//div[@class='komunikat']");
-			if (result!=null){
-				var result = DOM._GetFirstNodeTextContent(".//u",result);
-				if (result == L._Get('sDeconnecte')) page="pServerDeco";
-				else if (result == L._Get('sCourtePause')) page="pServerUpdate";
-				else page="pServerOther";
+				r = DOM._GetFirstNode("//div[@class='komunikat']");
+			if (r!=null){
+				var r = DOM._GetFirstNodeTextContent(".//u",r);
+				if (r == L._Get('sDeconnecte')) p="pServerDeco";
+				else if (r == L._Get('sCourtePause')) p="pServerUpdate";
+				else p="pServerOther";
 				}
 			else{
 				var qsA = DOM._QueryString("a"),
@@ -302,147 +295,147 @@ var DATAS = (function(){
 					path = window.location.pathname;
 				// page extérieur
 				if (path!="/"){
-					if (path=="/showmsg.php"&&qsA==null&&qsMid!=null) page="pShowMsg";
-					else if (path=="/showmsg.php"&&qsA=="profile") page="pShowProfile";
-					else if (path=="/test_items.php") page="pShowItems";
-					else page="pShowOther";
+					if (path=="/showmsg.php"&&qsA==null&&qsMid!=null) p="pShowMsg";
+					else if (path=="/showmsg.php"&&qsA=="profile") p="pShowProfile";
+					else if (path=="/test_items.php") p="pShowItems";
+					else p="pShowOther";
 					}
 				// page interne
 				// Profile
 				else if (qsA=="profile"){
 					var qsUid = DOM._QueryString("uid");
 					var qsEdit = DOM._QueryString("edit");
-					if (qsUid==null) page="pOProfile";
-					else if (!!qsEdit) page="pOProfileEdit";
-					else page="pProfile";
+					if (qsUid==null) p="pOProfile";
+					else if (!!qsEdit) p="pOProfileEdit";
+					else p="pProfile";
 					}
 				// Version
-				else if (qsA=="changelog") page="PChangelog";
+				else if (qsA=="changelog") p="PChangelog";
 				// Premium
 				else if (qsA=="premium"){
-					if (qsDo==null||qsDo=="prolong") page="pProlongPremium";
-					else if (qsDo=="services") page="pServicesPremium";
-					else if (qsDo=="history") page="pHistoryPremium";
+					if (qsDo==null||qsDo=="prolong") p="pProlongPremium";
+					else if (qsDo=="services") p="pServicesPremium";
+					else if (qsDo=="history") p="pHistoryPremium";
 					}
 				// Salle du Trône
-				else if (qsA==null||qsA=="main") page="pMain";
+				else if (qsA==null||qsA=="main") p="pMain";
 				// Entrainement
-				else if (qsA=="training") page="pTraining";
+				else if (qsA=="training") p="pTraining";
 				// Site de construction
-				else if (qsA=="build") page="pBuild";
+				else if (qsA=="build") p="pBuild";
 				// Vue sur la Cité
-				else if (qsA=="townview") page="pTownview";
+				else if (qsA=="townview") p="pTownview";
 				// Clan
 				else if (qsA=="aliance"){
-					if (qsDo=="list") page="pAlianceList";
-					else if (qsDo=="newclan") page="pNewAliance"; // créér
-					else if (qsDo=="apply") page="pApplyAliance"; // joindre
-					else if (qsDo=="editclan") page="pEditAliance";
-					else if (qsDo=="applies") page="pAppliesAliance";
-					else if (qsDo==null||qsDo=="leave") page="pOAliance";
+					if (qsDo=="list") p="pAlianceList";
+					else if (qsDo=="newclan") p="pNewAliance"; // créér
+					else if (qsDo=="apply") p="pApplyAliance"; // joindre
+					else if (qsDo=="editclan") p="pEditAliance";
+					else if (qsDo=="applies") p="pAppliesAliance";
+					else if (qsDo==null||qsDo=="leave") p="pOAliance";
 					else if (qsDo=="view"){
-						var result = DOM._GetFirstNode("//div[@class='top-options']/span[@class='lnk']");
-						if (result!=null) page="pOAliance";
-						else page="pAliance";
+						var r = DOM._GetFirstNode("//div[@class='top-options']/span[@class='lnk']");
+						if (r!=null) p="pOAliance";
+						else p="pAliance";
 						}
 					} 
 				// Demeure du Clan
-				else if (qsA=="clanbld") page = "pClanbld";
+				else if (qsA=="clanbld") p = "pClanbld";
 				// Magasin
-				else if (qsA=="townshop") page="pTownshop";
+				else if (qsA=="townshop") p="pTownshop";
 				// Souvenir
-				else if (qsA=="sshop") page = "pSshop";
+				else if (qsA=="sshop") p = "pSshop";
 				// Armurerie
-				else if (qsA=="equip") page="pEquip";
+				else if (qsA=="equip") p="pEquip";
 				// Commerce
 				else if (qsA=="trade"){
-					if (qsDo==null) page="pTrade";
-					else if (qsDo=="newtrade") page="pNewtrade";
-					else if (qsDo=="tradelog") page="pTradelog";
+					if (qsDo==null) p="pTrade";
+					else if (qsDo=="newtrade") p="pNewtrade";
+					else if (qsDo=="tradelog") p="pTradelog";
 					}
 				// Enchères - Moria I
 				else if (qsA=="auction"){
-					if (qsDo==null||qsDo=="watched") page="pAuctionWatched";
-					else if (qsDo=="new") page="pAuctionNew";
-					else if (qsDo=="itemlist") page="pAuctionItemList";
-					else if (qsDo=="closed") page="pAuctionClosed";
+					if (qsDo==null||qsDo=="watched") p="pAuctionWatched";
+					else if (qsDo=="new") p="pAuctionNew";
+					else if (qsDo=="itemlist") p="pAuctionItemList";
+					else if (qsDo=="closed") p="pAuctionClosed";
 					}
 				// Le Puits des Âmes - Moria I
 				else if (qsA=="mixer"){
-					if (qsDo==null||qsDo=="mkstone") page="pMkstone";
-					else if (qsDo=="upgitem") page="pUpgitem";
-					else if (qsDo=="mixitem") page="pMixitem";
-					else if (qsDo=="destitem") page="pDestitem";
-					else if (qsDo=="tatoo") page="pTatoo";
+					if (qsDo==null||qsDo=="mkstone") p="pMkstone";
+					else if (qsDo=="upgitem") p="pUpgitem";
+					else if (qsDo=="mixitem") p="pMixitem";
+					else if (qsDo=="destitem") p="pDestitem";
+					else if (qsDo=="tatoo") p="pTatoo";
 					}
 				// Préparer une embuscade
 				else if (qsA=="ambush"){
 					var qsOpt = DOM._QueryString("opt");
-					if (qsOpt==null) page="pAmbushRoot";
-					else if (qsOpt=="spy") page="pAmbushSpy";
-					else if (qsOpt=="atk") page="pAmbushAtk";
-					else if (qsOpt=="ambush") page="pAmbush";
+					if (qsOpt==null) p="pAmbushRoot";
+					else if (qsOpt=="spy") p="pAmbushSpy";
+					else if (qsOpt=="atk") p="pAmbushAtk";
+					else if (qsOpt=="ambush") p="pAmbush";
 					}
 				// Quêtes
 				else if (qsA=="quest"){
 					var qbsel = DOM._QueryString("qbsel");
-					if (qbsel==true) page="pQuestSel";
-					else if (DOM._GetFirstNode("//*[@id='quest_timeleft']") != null) page="pQuestProgress";
-					else page="pQuestLaunch";
+					if (qbsel==true) p="pQuestSel";
+					else if (DOM._GetFirstNode("//*[@id='quest_timeleft']") != null) p="pQuestProgress";
+					else p="pQuestLaunch";
 					}
 				// Expéditions
 				else if (qsA=="cevent"){
 					var currentExpe = DOM._GetFirstNode("//td[@class='ambinprogress']")!= null;
-					if ((qsDo==null&&currentExpe)||qsDo=="current") page="pCurrentExpe";
-					else if ((qsDo==null&&!currentExpe)||qsDo=="new") page="pNewExpe";
-					else if (qsDo=="sacrifice") page="pSacrificeExpe";
+					if ((qsDo==null&&currentExpe)||qsDo=="current") p="pCurrentExpe";
+					else if ((qsDo==null&&!currentExpe)||qsDo=="new") p="pNewExpe";
+					else if (qsDo=="sacrifice") p="pSacrificeExpe";
 					}
 				// Roi de la Colline
 				else if (qsA=="swr"){
 					var currentExpe = DOM._GetFirstNode("//td[@class='ambinprogress']")!= null;
-					if ((qsDo==null&&currentExpe)||qsDo=="current") page="pCurrentSwr";
-					else if ((qsDo==null&&!currentExpe)||qsDo=="new") page="pNewSwr";
-					else if (qsDo=="enchant") page="pEnchantSwr";
+					if ((qsDo==null&&currentExpe)||qsDo=="current") p="pCurrentSwr";
+					else if ((qsDo==null&&!currentExpe)||qsDo=="new") p="pNewSwr";
+					else if (qsDo=="enchant") p="pEnchantSwr";
 					}
 				// Page L’Arène
-				else if (qsA=="newarena") page="pArena";
+				else if (qsA=="newarena") p="pArena";
 				// Page Missions
-				else if (qsA=="tasks") page="pTasks";
+				else if (qsA=="tasks") p="pTasks";
 				// Page des messages
 				else if (qsA=="msg"){
 					var qsType = DOM._QueryString("type");
 					if (qsDo==null||qsDo=="list"){
-						if (qsType==null||qsType=="1") page="pMsgList";
-						else if (qsType=="2") page="pMsgSaveList";
-						else if (qsType=="3") page="pMsgSendList";
+						if (qsType==null||qsType=="1") p="pMsgList";
+						else if (qsType=="2") p="pMsgSaveList";
+						else if (qsType=="3") p="pMsgSendList";
 						}
-					else if (qsDo=="clanmsg") page="pMsgClan";
-					else if (qsDo=="write") page="pMsgWrite";
-					else if (qsDo=="fl") page="pMsgFriendList";
+					else if (qsDo=="clanmsg") p="pMsgClan";
+					else if (qsDo=="write") p="pMsgWrite";
+					else if (qsDo=="fl") p="pMsgFriendList";
 					else if (qsDo=="view" && qsMid!=null){
-						if (qsType==null||qsType=="1") page="pMsg";
-						else if (qsType=="2") page="pMsgSave";
-						else if (qsType=="3") page="pMsgSend";
+						if (qsType==null||qsType=="1") p="pMsg";
+						else if (qsType=="2") p="pMsgSave";
+						else if (qsType=="3") p="pMsgSend";
 						}
 					}
 				// Page Notes
-				else if (qsA=="notes") page="pNotes";
+				else if (qsA=="notes") p="pNotes";
 				// Page Classement
-				else if (qsA=="rank") page="pRank";
+				else if (qsA=="rank") p="pRank";
 				// Page Préférences
 				else if (qsA=="settings"){
-					if (qsDo==null) page="pRootSettings";
-					else if (qsDo=="ai") page="pSettingsAi";
-					else if (qsDo=="acc") page="pSettingsAcc";
-					else if (qsDo=="vac") page="pSettingsVac";
-					else if (qsDo=="delchar") page="pSettingsDelchar";
+					if (qsDo==null) p="pRootSettings";
+					else if (qsDo=="ai") p="pSettingsAi";
+					else if (qsDo=="acc") p="pSettingsAcc";
+					else if (qsDo=="vac") p="pSettingsVac";
+					else if (qsDo=="delchar") p="pSettingsDelchar";
 					}
 				// Page Rapporter à l`opérateur
-				else if (qsA=="report") page="pReport";
+				else if (qsA=="report") p="pReport";
 				// Page Copyright
-				else if (qsA=="developer") page="pCopyright";
+				else if (qsA=="developer") p="pCopyright";
 				}
-			return page;
+			return p;
 			}
 		};
 	})();
@@ -465,9 +458,9 @@ var PREF = (function(){
 			else if (_Exist(defPrefs[key]))return defPrefs[key];
 			else return null;
 			},
-		_Set: function(key,value){
+		_Set: function(key,v){
 			if (ID!=null){
-				prefs[key] = value;
+				prefs[key] = v;
 				LS._SetVar(index+ID,prefs);
 				}
 			}
@@ -479,16 +472,16 @@ CSS
 ******************************************************/
 function SetCSS(){
 	const css = 
-		".BWSDtriSelect{color:lime;}"
-		+".BWSD_BodyL,.BWSD_HeadL{text-align:left;}"
-		+".BWSD_BodyR,.BWSD_HeadR{text-align:right;}"
-		+".BWSD_HeadL,.BWSDDel{font-weight: bold;cursor: pointer;padding: 0 3px;}"
-		+".BWSD_BodyL,.BWSD_BodyR,.BWSDDel{border-right:0;border-left:0;border-top:thin solid black;border-bottom:thin solid black;padding: 0 3px;color: black;}"
-		+".BWSDDel{text-align:center;border:thin solid black;width:3em;color:white;background-color:red}"
-		+".BWSDBut,.BWSDButError{height:10px;margin:2px 0px;}"
-		+".BWSDButError{background-color:red;}",
+		[".BWSDtriSelect{color:lime;}",
+		".BWSD_BodyL,.BWSD_HeadL{text-align:left;}",
+		".BWSD_BodyR,.BWSD_HeadR{text-align:right;}",
+		".BWSD_HeadL,.BWSDDel{font-weight: bold;cursor: pointer;padding: 0 3px;}",
+		".BWSD_BodyL,.BWSD_BodyR,.BWSDDel{border-right:0;border-left:0;border-top:thin solid black;border-bottom:thin solid black;padding: 0 3px;color: black;}",
+		".BWSDDel{text-align:center;border:thin solid black;width:3em;color:white;background-color:red}",
+		".BWSDBut,.BWSDButError{height:10px;margin:2px 0px;}",
+		".BWSDButError{background-color:red;}"],
 		head = DOM._GetFirstNode("//head");
-	if (head!=null) IU._CreateElement('style',{'type':'text/css'},[css],{},head);
+	if (head!=null) IU._CreateElement('style',{'type':'text/css'},[css.join('')],{},head);
 	}
 
 /******************************************************
@@ -525,11 +518,11 @@ function spyDel(e,i){
 	updateTable();
 	}
 function inputNumber(e){
-	var value = e.target.value,
-		result = new RegExp("^(|(?:[0-9]+|[0-9]*[.]?[0-9]+))$").exec(value);
-	if (result!=null){
+	var v = e.target.value,
+		r = new RegExp("^(|(?:[0-9]+|[0-9]*[.]?[0-9]+))$").exec(v);
+	if (r!=null){
 		e.target.setAttribute('class','BWSDBut');
-		PREF._Set('max',value);
+		PREF._Set('max',v);
 		updateTable();
 		}
 	else e.target.setAttribute('class','BWSDButError');
@@ -541,7 +534,7 @@ function updateTable(){
 		tri = PREF._Get('tri'+menu);
 	//créé le tableau pour tri ultérieur
 	for (var key in listS){//key:[msgId,time,spyInfo]
-		var info = listS[key][2]!=null?listS[key][2]:[0,null,[],[],[]], //[type,iud,result,res,bat]
+		var info = listS[key][2]!=null?listS[key][2]:[0,null,[],[],[]], //[type,iud,r,res,bat]
 			col = [listS[key][1],key];
 		if (menu==1) col = col.concat((info[2][2]?info[2][2]:''),(info[2][1]?info[2][1]:''),(info[3][0]?info[3][0]:''),(info[3][1]?info[3][1]:''),(info[3][2]?info[3][2]:''));
 		else{
@@ -555,10 +548,10 @@ function updateTable(){
 		var x = a[2][tri[0]-1].toString().toUpperCase(),
 			y = b[2][tri[0]-1].toString().toUpperCase();
 		if (menu==2&&tri[0]==3){// colonne "adresse"
-			var result = new RegExp(L._Get('sTriAdrTest')).exec(x),
-				result2 = new RegExp(L._Get('sTriAdrTest')).exec(y);
-			if (result!=null) x = parseInt(result[1])*100000+parseInt(result[2])*100+parseInt(result[3]);
-			if (result!=null) y = parseInt(result2[1])*100000+parseInt(result2[2])*100+parseInt(result2[3]);
+			var r = new RegExp(L._Get('sTriAdrTest')).exec(x),
+				r2 = new RegExp(L._Get('sTriAdrTest')).exec(y);
+			if (r!=null) x = parseInt(r[1])*100000+parseInt(r[2])*100+parseInt(r[3]);
+			if (r!=null) y = parseInt(r2[1])*100000+parseInt(r2[2])*100+parseInt(r2[3]);
 			}
 		else if (tri[0]!=2){
 			x = parseFloat(x.replace(/ /g,''));
@@ -597,8 +590,8 @@ function updateTable(){
 	for (var i=0;(i<list2.length&&i<(max==''?list2.length:max));i++){
 		var tr = IU._CreateElement('tr',{'style':'background-color:'+(list2[i][0]==1?'Green':list2[i][0]==-1?'Red':'white')},[],{},nodesIU['tbodyS']);
 		for (var j=0;j<list2[i][2].length;j++){
-			var value = j==0?(new Date(list2[i][2][0])).toLocaleDateString():j==1?'':list2[i][2][j],
-				td = IU._CreateElement('td',{'class':'BWSD_BodyL'},[value],{},tr);
+			var v = j==0?(new Date(list2[i][2][0])).toLocaleDateString():j==1?'':list2[i][2][j],
+				td = IU._CreateElement('td',{'class':'BWSD_BodyL'},[v],{},tr);
 			if (j==1) IU._CreateElement('a',(list2[i][1]!=null?{'href':'?a=profile&uid='+list2[i][1]}:{}),[list2[i][2][1].truncate(15)],{},td);
 			}
 		IU._CreateElement('td',{'class':'BWSDDel'},['X'],{'click':[spyDel,list2[i][2][1]]},tr);
@@ -627,19 +620,19 @@ function updateLogS(player,msgId,msgTime,spyInfo){
 if (!JSON) throw new Error("Erreur : le service JSON n\'est pas disponible.");
 else if (!window.localStorage) throw new Error("Erreur : le service localStorage n\'est pas disponible.");
 else{
-	var page = DATAS._GetPage(),
+	var p = DATAS._GetPage(),
 		player = DATAS._PlayerName(),
 		IDs = LS._GetVar('BWSD:IDS',{});
-console.debug('BWSDpage :',page);
+console.debug('BWSDpage :',p);
 	// Pages gérées par le script
-	if (['null','pShowProfile','pShowMsg','pShowOther','pShowItems','pServerDeco','pServerUpdate','pServerOther'].indexOf(page)==-1&&player!=null){
+	if (['null','pShowProfile','pShowMsg','pShowOther','pShowItems','pServerDeco','pServerUpdate','pServerOther'].indexOf(p)==-1&&player!=null){
 console.debug('BWSDstart: %o %o',player,IDs);
 		// Salle du Trône
-		if (page=='pMain'){
-			var result = DOM._GetFirstNodeTextContent("//div[@class='throne-maindiv']/div/span[@class='reflink']",null);
-			if (result!=null){
-				var result2 = /r\.php\?r=([0-9]+)/.exec(result),
-					ID = _Exist(result2[1])?result2[1]:null;
+		if (p=='pMain'){
+			var r = DOM._GetFirstNodeTextContent("//div[@class='throne-maindiv']/div/span[@class='reflink']",null);
+			if (r!=null){
+				var r2 = /r\.php\?r=([0-9]+)/.exec(r),
+					ID = _Exist(r2[1])?r2[1]:null;
 				if (ID!=null){
 					for (var i in IDs) if (IDs[i]==ID) delete IDs[i]; // en cas de changement de nom
 					IDs[player] = ID;
@@ -652,16 +645,16 @@ console.debug('BWSDstart: %o %o',player,IDs);
 			var ID = IDs[player];
 			PREF._Init(ID);
 			SetCSS();
-			if (page=='pMsgList'||page=='pMsgSaveList'){
+			if (p=='pMsgList'||p=='pMsgSaveList'){
 				var list = DOM._GetNodes("//div[@id='content-mid']//tr[@class='tblheader']/following-sibling::tr");
 				for (var i=0;i<list.snapshotLength;i++){
 					var node = list.snapshotItem(i),
-						msg = DOM._GetFirstNodeTextContent(".//td[2]/a[@class='msg-link']",null,node),
+						msg = DOM._GetFirstNodeTextContent(".//td[2]/a",null,node),
 						msgDate = DOM._GetFirstNodeTextContent(".//td[4]",null,node),
 						msgId = DOM._GetFirstNode(".//td[1]/input",node);
 					// conversion au format Date
-					var value = new RegExp("([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})").exec(msgDate);
-						msgDate = (value!=null)?new Date(value[1],value[2]-1,value[3],value[4],value[5],value[6]):null;
+					var v = new RegExp("([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})").exec(msgDate);
+						msgDate = (v!=null)?new Date(v[1],v[2]-1,v[3],v[4],v[5],v[6]):null;
 					if (msg!=null&&msgDate!=null&&msgId!=null){
 						var msgId = msgId.getAttribute('id').replace('msgid_',''),
 							m1 = new RegExp(L._Get('sSpyMsg')).exec(msg);
@@ -670,48 +663,48 @@ console.debug('BWSDstart: %o %o',player,IDs);
 						}
 					}
 				}
-			else if (page=='pMsg'||page=='pMsgSave'){
+			else if (p=='pMsg'||p=='pMsgSave'){
 				var t = DOM._GetFirstNodeInnerHTML("//div[@class='msg-content ']", null);
 				if (t!=null){
-					var result = new RegExp(L._Get('sSpyTest0')).exec(t),
-						result1 = new RegExp(L._Get('sSpyTest1')).exec(t),
-						result2 = new RegExp(L._Get('sSpyTest2')).exec(t),
-						result3 = new RegExp(L._Get('sSpyTest3')).exec(t),
-						result4 = new RegExp(L._Get('sSpyTest4')).exec(t),
+					var r = new RegExp(L._Get('sSpyTest0')).exec(t),
+						r1 = new RegExp(L._Get('sSpyTest1')).exec(t),
+						r2 = new RegExp(L._Get('sSpyTest2')).exec(t),
+						r3 = new RegExp(L._Get('sSpyTest3')).exec(t),
+						r4 = new RegExp(L._Get('sSpyTest4')).exec(t),
 						qsMid = DOM._QueryString("mid");
-					if (result!=null){// rapport d'espionnage
-						var spyInfo = [0,result[1],[],[],[]];//[type,iud,result,res,bat]
-						if (result2!=null&&result1!=null){
-							spyInfo[0] = result2[4]==L._Get('sSpyOk')?1:-1;
-							spyInfo[2] = [result1[3].replace(/ /g,''),Number(result2[2]),result2[3]];//[zone,espions,%]
+					if (r!=null){// rapport d'espionnage
+						var spyInfo = [0,r[1],[],[],[]];//[type,iud,result,res,bat]
+						if (r2!=null&&r1!=null){
+							spyInfo[0] = r2[4]==L._Get('sSpyOk')?1:-1;
+							spyInfo[2] = [r1[3].replace(/ /g,''),Number(r2[2]),r2[3]];//[zone,espions,%]
 							}
-						if (result3!=null){
-							spyInfo[3] = [result3[9],result3[10],result3[11]];//[LOL,pop,sang]
+						if (r3!=null){
+							spyInfo[3] = [r3[9],r3[10],r3[11]];//[LOL,pop,sang]
 							}
-						if (result4!=null){// batiments
+						if (r4!=null){// batiments
 							for (var i=0;i<L._Get('sBats').length;i++){
 								var bats = new RegExp(L._Get('sSpyBat',L._Get('sBats')[i])).exec(t);
 								spyInfo[4][i] = bats!=null?Number(bats[1]):0;
 								}
 							}
-						updateLogS(result[2],qsMid,null,spyInfo);
+						updateLogS(r[2],qsMid,null,spyInfo);
 						}
 					}
 				}
-			else if (page=='pAmbushRoot'){
+			else if (p=='pAmbushRoot'){
 				var spyaction = DOM._GetNodes("//div[@id='content-mid']//tr/td/span[@class='spyinprogress']");
 				for (var i=0;i<spyaction.snapshotLength;i++){
 					var node = spyaction.snapshotItem(i),
 						spyId = node.getAttribute('id'),
 						spyScript = DOM._GetFirstNodeInnerHTML("./parent::td/script",null,node);
 					if (spyScript!=null){
-						var result = new RegExp(L._Get('sSpyTime',spyId)).exec(spyScript),
-							result2 = new RegExp(L._Get('sMidMsg')).exec(spyScript),
+						var r = new RegExp(L._Get('sSpyTime',spyId)).exec(spyScript),
+							r2 = new RegExp(L._Get('sMidMsg')).exec(spyScript),
 							playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']",null,node),
 							msgDate = DATAS._Time();
-						if (msgDate!=null&&result!=null&&result2!=null&&playerVS!=null){
-							msgDate.setTime(msgDate.getTime()+result[1]*1000);
-							updateLogS(playerVS,result2[1],msgDate,null);
+						if (msgDate!=null&&r!=null&&r2!=null&&playerVS!=null){
+							msgDate.setTime(msgDate.getTime()+r[1]*1000);
+							updateLogS(playerVS,r2[1],msgDate,null);
 							}
 						}
 					}

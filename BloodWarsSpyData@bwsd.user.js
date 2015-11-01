@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2015.09.03
+// @version     2015.11.01
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -99,6 +99,9 @@ var DOM = (function(){
 		_GetFirstNodeInnerHTML: function(path,defaultValue,root){
 			var r = this._GetFirstNode(path,root);
 			return (r!=null&&r.innerHTML!=null?r.innerHTML:defaultValue);
+			},
+		_$: function(a){
+			return document.getElementById(a);
 			},
 		_QueryString: function(key){
 			var url = window.location.search,
@@ -558,7 +561,7 @@ function updateTable(){
 			var r = new RegExp(L._Get('sTriAdrTest')).exec(x),
 				r2 = new RegExp(L._Get('sTriAdrTest')).exec(y);
 			if (r!=null) x = parseInt(r[1])*100000+parseInt(r[2])*100+parseInt(r[3]);
-			if (r!=null) y = parseInt(r2[1])*100000+parseInt(r2[2])*100+parseInt(r2[3]);
+			if (r2!=null) y = parseInt(r2[1])*100000+parseInt(r2[2])*100+parseInt(r2[3]);
 			}
 		else if (tri[0]!=2){
 			x = parseFloat(x.replace(/ /g,''));
@@ -574,17 +577,17 @@ function updateTable(){
 	var max = PREF._Get('max'),
 		titles = menu==1?L._Get('sHead1'):L._Get('sHead2'),
 		head1 = IU._CreateElements({
-		'trS00':['tr',{'class':'BWEbold'},,,nodesIU['theadS']],
-		'tdS001':['td',{'colspan':2},[],,'trS00'],
-		's1':['a',{'href':'#','onclick':'return false;','class':(menu==1?'active':'')},[L._Get('sRes')],{'click':[clickMenu,1]},'tdS001'],'s2':['span',,[' | '],,'tdS001'],
-		's3':['a',{'href':'#','onclick':'return false;','class':(menu==2?'active':'')},[L._Get('sBat')],{'click':[clickMenu,2]},'tdS001'],
-		'tdS002':['td',{'class':'BWSD_HeadR','colspan':(titles.length-2)},[],,'trS00'],
-		'span01':['span',,[L._Get('sReportMax')],,'tdS002'],
-		'span02':['input',{'type':'text','class':'BWSDBut','value':max,'size':'2','maxlength':'2'},,{'change':[inputNumber]},'tdS002'],
-		'span03':['span',{'class':'BWSD_HeadL'},[("/ "+Object.keys(listS).length)],,'tdS002'],
-		'tdS003':['th',{'class':'BWSDDel'},[L._Get('sRAZ')],{'click':[spyRAZ]},'trS00'],
-		'trS01':['tr',{'id':'BWSD_Head','class':'tblheader'},,,nodesIU['theadS']]
-		});
+			'trS00':['tr',{'class':'BWEbold'},,,nodesIU['theadS']],
+			'tdS001':['td',{'colspan':2},[],,'trS00'],
+			's1':['a',{'href':'#','onclick':'return false;','class':(menu==1?'active':'')},[L._Get('sRes')],{'click':[clickMenu,1]},'tdS001'],'s2':['span',,[' | '],,'tdS001'],
+			's3':['a',{'href':'#','onclick':'return false;','class':(menu==2?'active':'')},[L._Get('sBat')],{'click':[clickMenu,2]},'tdS001'],
+			'tdS002':['td',{'class':'BWSD_HeadR','colspan':(titles.length-2)},[],,'trS00'],
+			'span01':['span',,[L._Get('sReportMax')],,'tdS002'],
+			'span02':['input',{'type':'text','class':'BWSDBut','value':max,'size':'2','maxlength':'2'},,{'change':[inputNumber]},'tdS002'],
+			'span03':['span',{'class':'BWSD_HeadL'},[("/ "+Object.keys(listS).length)],,'tdS002'],
+			'tdS003':['th',{'class':'BWSDDel'},[L._Get('sRAZ')],{'click':[spyRAZ]},'trS00'],
+			'trS01':['tr',{'id':'BWSD_Head','class':'tblheader'},,,nodesIU['theadS']]
+			});
 	for (var i=0;i<titles.length;i++){
 		var th = IU._CreateElement('th',{'class':'BWSD_HeadL'},[titles[i]],{'click':[clickCol,i+1]},head1['trS01']);
 		if (menu==2&&i>2){
@@ -717,8 +720,7 @@ console.debug('BWSDstart: %o %o',player,IDs);
 					}
 				}
 			// init IU
-			var nodesIU,
-				nodeOptions = DOM._GetFirstNode("//div[@class='remark']"),
+			var nodeOptions = DOM._GetFirstNode("//div[@class='remark']"),
 				contentMid = DOM._GetFirstNode("//div[@id='content-mid']"),
 				contentMidChild = DOM._GetFirstNode("//div[@id='content-mid']/*");
 			if (nodeOptions!=null&&contentMidChild!=null){
@@ -738,8 +740,8 @@ console.debug('BWSDstart: %o %o',player,IDs);
 					'theadS':['thead',,,,'tableS'],
 					'tbodyS':['tbody',{'id':'BWSD_Body'},,,'tableS'],
 					'br':['br',,,,'divIU'],
-					};
-				nodesIU = IU._CreateElements(elementsIU);
+					},
+					nodesIU = IU._CreateElements(elementsIU);
 				contentMid.insertBefore(nodesIU['divIU'],contentMidChild);
 				updateTable();
 				}

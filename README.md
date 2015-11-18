@@ -20,14 +20,16 @@ Pour les bugs, GitHub propose une section [Issues](https://github.com/Ecilam/Blo
 * Ensuite afficher la version [RAW](https://raw.githubusercontent.com/Ecilam/BloodWarsSpyData/master/BloodWarsSpyData@bwsd.user.js) du script pour que le module (ou l'extension) vous propose de l'installer.
 
 ###FONCTIONS
-* Mémorise les espionnages de ressources et bâtiments dans un tableau.
+* Mémorise les espionnages (ressources et bâtiments uniquement) pour les afficher dans un tableau.
 * Tri suivant la colonne de son choix.
+* Menu "Options" permettant de modifier l'agencement des tableaux.
 * Multicompte supporté (voir réglement du jeu).
 
 ###AIDE
 * **1ère utilisation :** un message vous rappellera de consulter la Salle du Trône pour que le script puisse récupérer l'IUD du personnage afin de pouvoir fonctionner.
 * Pour afficher/masquer le tableau, cliquer le lien 'Spy Data' ajouté dans les liens du haut.
-* Choisisser le nombre de ligne affichée via la zone "Lignes".
+* Choisissez le nombre maximum de ligne a afficher via la zone "Lignes".
+* Dans le menu "Options", cliquer sur le titre de la colonne pour Afficher/masquer celle-ci. Les flèches permettent de modifier l'ordre des colonnes.
 
 ###INFORMATIONS
 * **Données :** les données sont stockées avec LOCALSTORAGE.

@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2015.11.18
+// @version     2015.12.04
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -139,68 +139,57 @@ var IU = (function(){
 			var r = _Exist(oldList)?oldList:{};
 			for (var key in list){
 				if (list.hasOwnProperty(key)){
-					var type = _Exist(list[key][0])?list[key][0]:null,
-						attributes = _Exist(list[key][1])?list[key][1]:{},
-						content = _Exist(list[key][2])?list[key][2]:[],
-						events = _Exist(list[key][3])?list[key][3]:{},
-						node = _Exist(r[list[key][4]])?r[list[key][4]]:(_Exist(list[key][4])?list[key][4]:null);
-					if (type!==null) r[key] = this._CreateElement(type,attributes,content,events,node);
+					var node = _Exist(r[list[key][4]])?r[list[key][4]]:list[key][4];
+					r[key] = this._CreateElement(list[key][0],list[key][1],list[key][2],list[key][3],node);
 					}
 				}
 			return r;
 			},
 		_CreateElement: function(type,attributes,content,events,node){
-			if (_Exist(type)&&type!==null){
-				attributes = _Exist(attributes)?attributes:{};
-				content = _Exist(content)?content:[];
-				events = _Exist(events)?events:{};
-				node = _Exist(node)?node:null;
-				var r = document.createElement(type);
-				for (var key in attributes){
-					if (attributes.hasOwnProperty(key)){
-						if (_Type(attributes[key])!='Boolean') r.setAttribute(key,attributes[key]);
-						else if (attributes[key]===true) r.setAttribute(key,key.toString());
-						}
+			var r = document.createElement(type);
+			for (var key in attributes){
+				if (attributes.hasOwnProperty(key)){
+					if (_Type(attributes[key])!='Boolean') r.setAttribute(key,attributes[key]);
+					else if (attributes[key]===true) r.setAttribute(key,key.toString());
 					}
-				for (key in events){
-					if (events.hasOwnProperty(key)){
-						this._addEvent(r,key,events[key][0],events[key][1]);
-						}
-					}
-				for (var i=0; i<content.length; i++){
-					if (_Type(content[i])==='Object') r.appendChild(content[i]);
-					else r.textContent+= content[i];
-					}
-				if (node!==null) node.appendChild(r);
-				return r;
 				}
-			else return null;
+			for (key in events){
+				if (events.hasOwnProperty(key)){
+					this._addEvent(r,key,events[key][0],events[key][1]);
+					}
+				}
+			for (var i=0; i<content.length; i++){
+				if (_Type(content[i])==='Object') r.appendChild(content[i]);
+				else r.textContent+= content[i];
+				}
+			if (node!==null) node.appendChild(r);
+			return r;
 			},
 		_addEvent: function(obj,type,fn,par){
 			var funcName = function(event){return fn.call(obj,event,par);};
 			obj.addEventListener(type,funcName,false);
-			if (!obj.BWMListeners) {obj.BWMListeners = {};}
-			if (!obj.BWMListeners[type]) obj.BWMListeners[type]={};
-			obj.BWMListeners[type][fn.name]=funcName;
+			if (!obj.BWSDListeners) {obj.BWSDListeners = {};}
+			if (!obj.BWSDListeners[type]) obj.BWSDListeners[type]={};
+			obj.BWSDListeners[type][fn.name]=funcName;
 			},
 		_removeEvent: function(obj,type,fn){
-			if (obj.BWMListeners[type]&&obj.BWMListeners[type][fn.name]){
-				obj.removeEventListener(type,obj.BWMListeners[type][fn.name],false);
-				delete obj.BWMListeners[type][fn.name];
+			if (obj.BWSDListeners[type]&&obj.BWSDListeners[type][fn.name]){
+				obj.removeEventListener(type,obj.BWSDListeners[type][fn.name],false);
+				delete obj.BWSDListeners[type][fn.name];
 				}
 			},
 		_removeEvents: function(obj){
-			if (obj.BWMListeners){
-				for (var key in obj.BWMListeners){
-					if (obj.BWMListeners.hasOwnProperty(key)){
-						for (var key2 in obj.BWMListeners[key]){
-							if (obj.BWMListeners[key].hasOwnProperty(key2)){
-								obj.removeEventListener(key,obj.BWMListeners[key][key2],false);
+			if (obj.BWSDListeners){
+				for (var key in obj.BWSDListeners){
+					if (obj.BWSDListeners.hasOwnProperty(key)){
+						for (var key2 in obj.BWSDListeners[key]){
+							if (obj.BWSDListeners[key].hasOwnProperty(key2)){
+								obj.removeEventListener(key,obj.BWSDListeners[key][key2],false);
 								}
 							}
 						}
 					}
-				delete obj.BWMListeners;
+				delete obj.BWSDListeners;
 				}
 			}
 		};
@@ -246,18 +235,18 @@ var L = (function(){
 		"sSpyMsg": ["Rapport de l`opération - cible: (.+)\\.",
 				"Spy report - target: (.+)\\.",
 				"Raport szpiegowski - cel: (.+)\\."],
-		"sSpyTest0":["<br>Cible de l`espionnage: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
-				"<br>Target: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
-				"<br>Cel szpiegowania: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>"],
-		"sSpyTest1":["<br>Territoire: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
-				"<br>Territory: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
-				"<br>Teren: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>"],
-		"sSpyTest2":["<br>Ordres: <b>([^<>]+)<\\/b><br>Le nombre d`espions: <b>([0-9]+)<\\/b><br>Chances de réussite: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>",
-				"<br>Orders: <b>([^<>]+)<\\/b><br>Number of spies: <b>([0-9]+)<\\/b><br>Chance of success: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>",
-				"<br>Rozkazy: <b>([^<>]+)<\\/b><br>Ilość szpiegów: <b>([0-9]+)<\\/b><br>Szanse powodzenia: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>"],
-		"sSpyTest3":["<br><u>Les renseignements obtenus<\\/u><br>NOM: <b>([^<>]+)<\\/b><br>RACE: <b>([^<>]+)<\\/b><br>SEXE: <b>([^<>]+)<\\/b><br><br>Niveau: <b>([0-9]+)<\\/b><br>Pts DE VIE: <b>([0-9]+) / ([0-9]+)<\\/b><br>Pts DE SANG: <b>([0-9]+) / ([0-9]+)<\\/b><br>Argent: <b>([0-9 ]+) LOL</b><br>Population: <b>([0-9 ]+)<\\/b><br>Sang: <b>([0-9 ]+)<\\/b>",
-				"<br><u>Acquired information<\\/u><br>NAME: <b>([^<>]+)<\\/b><br>RACE: <b>([^<>]+)<\\/b><br>SEX: <b>([^<>]+)<\\/b><br><br>Level: <b>([0-9]+)<\\/b><br>HIT POINTS: <b>([0-9]+) / ([0-9]+)<\\/b><br>BLOOD POINTS: <b>([0-9]+) / ([0-9]+)<\\/b><br>Money: <b>([0-9 ]+) Lgo</b><br>People: <b>([0-9 ]+)<\\/b><br>Blood: <b>([0-9 ]+)<\\/b>",
-				"<br><u>Zdobyte informacje<\\/u><br>IMIĘ: <b>([^<>]+)<\\/b><br>RASA: <b>([^<>]+)<\\/b><br>PŁEĆ: <b>([^<>]+)<\\/b><br><br>Poziom: <b>([0-9]+)<\\/b><br>PKT\\. ŻYCIA: <b>([0-9]+) / ([0-9]+)<\\/b><br>PKT\\. KRWI: <b>([0-9]+) / ([0-9]+)<\\/b><br>Pieniądze: <b>([0-9 ]+) PLN</b><br>Ludzie: <b>([0-9 ]+)<\\/b><br>Krew: <b>([0-9 ]+)<\\/b>"],
+		"sSpyTest0":["Cible de l`espionnage: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
+				"Target: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
+				"Cel szpiegowania: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>"],
+		"sSpyTest1":["Territoire: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
+				"Territory: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
+				"Teren: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>"],
+		"sSpyTest2":["Ordres: <b>([^<>]+)<\\/b><br>Le nombre d`espions: <b>([0-9]+)<\\/b><br>Chances de réussite: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>",
+				"Orders: <b>([^<>]+)<\\/b><br>Number of spies: <b>([0-9]+)<\\/b><br>Chance of success: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>",
+				"Rozkazy: <b>([^<>]+)<\\/b><br>Ilość szpiegów: <b>([0-9]+)<\\/b><br>Szanse powodzenia: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>"],
+		"sSpyTest3":["NOM: <b>([^<>]+)<\\/b><br>RACE: <b>([^<>]+)<\\/b><br>SEXE: <b>([^<>]+)<\\/b><br><br>Niveau: <b>([0-9]+)<\\/b><br>Pts DE VIE: <b>([0-9]+) / ([0-9]+)<\\/b><br>Pts DE SANG: <b>([0-9]+) / ([0-9]+)<\\/b><br>Argent: <b>([0-9 ]+) LOL</b><br>Population: <b>([0-9 ]+)<\\/b><br>Sang: <b>([0-9 ]+)<\\/b>",
+				"NAME: <b>([^<>]+)<\\/b><br>RACE: <b>([^<>]+)<\\/b><br>SEX: <b>([^<>]+)<\\/b><br><br>Level: <b>([0-9]+)<\\/b><br>HIT POINTS: <b>([0-9]+) / ([0-9]+)<\\/b><br>BLOOD POINTS: <b>([0-9]+) / ([0-9]+)<\\/b><br>Money: <b>([0-9 ]+) Lgo</b><br>People: <b>([0-9 ]+)<\\/b><br>Blood: <b>([0-9 ]+)<\\/b>",
+				"IMIĘ: <b>([^<>]+)<\\/b><br>RASA: <b>([^<>]+)<\\/b><br>PŁEĆ: <b>([^<>]+)<\\/b><br><br>Poziom: <b>([0-9]+)<\\/b><br>PKT\\. ŻYCIA: <b>([0-9]+) / ([0-9]+)<\\/b><br>PKT\\. KRWI: <b>([0-9]+) / ([0-9]+)<\\/b><br>Pieniądze: <b>([0-9 ]+) PLN</b><br>Ludzie: <b>([0-9 ]+)<\\/b><br>Krew: <b>([0-9 ]+)<\\/b>"],
 		"sSpyTest4":["Les niveaux des bâtiments:","Buildings` levels:","Poziomy budynków:"],
 		"sSpyBat":["<br>$1: <b>([0-9]+)<\\/b>"],
 		"sBats":[["AGENCE D`EMPLOI","MAISON CLOSE","BOUCHERIE","POSTE DE POLICE","MAISON DE REFUGE","AGENCE DE PROTECTION","GARNISON","TRAFIQUANT D`ARMES","URGENCES","MONT DE PIÉTÉ","QUOTIDIEN LOCAL \"DANSE MACABRE\"","HÔPITAL","CIMETIÈRE","BANQUE DE SANG","CATHÉDRALE","ARMURERIE","MARCHÉ NOIR","ARRÊT TAXI"],
@@ -847,14 +836,13 @@ console.debug('BWSDstart: %o %o',player,IDs);
 				contentMid = DOM._GetFirstNode("//div[@id='content-mid']"),
 				contentMidChild = DOM._GetFirstNode("//div[@id='content-mid']/*");
 			if (nodeOptions!==null&&contentMidChild!==null){
-				var titleMenuIU = {
-					'1':['a',{'class':'remark','target':'_blank','href':'#','onclick':'return false;'},[L._Get('sTitle')],{'click':[showIU]}],
-					'2':['span',{},[' | ']]},
-					nodeTitle = IU._CreateElements(titleMenuIU);
+				var nodeTitle = IU._CreateElements({
+					'1':['a',{'class':'remark','target':'_blank','href':'#','onclick':'return false;'},[L._Get('sTitle')],{'click':[showIU]},null],
+					'2':['span',{},[' | '],{},null]});
 				nodeOptions.insertBefore(nodeTitle['2'],nodeOptions.firstChild);
 				nodeOptions.insertBefore(nodeTitle['1'],nodeOptions.firstChild);
-				var elementsIU = {
-					'divIU':['div',{'id':'BWSD','style':'display:'+(set[0]==1?'block;':'none;')}],
+				var nodesIU = IU._CreateElements({
+					'divIU':['div',{'id':'BWSD','style':'display:'+(set[0]==1?'block;':'none;')},[],{},null],
 					'fieldset':['fieldset',{'class':'equip'},[],{},'divIU'],
 					'legend':['legend',{'class':'arcane-header'},[],{},'fieldset'],
 					'l1':['span',{},[L._Get('sTitle')+' '],{},'legend'],
@@ -863,9 +851,7 @@ console.debug('BWSDstart: %o %o',player,IDs);
 					'tableS':['table',{'style':'border-collapse:collapse;width:100%'},[],{},'fieldset'],
 					'theadS':['thead',{},[],{},'tableS'],
 					'tbodyS':['tbody',{},[],{},'tableS'],
-					'br':['br',{},[],{},'divIU'],
-					},
-					nodesIU = IU._CreateElements(elementsIU);
+					'br':['br',{},[],{},'divIU']});
 				contentMid.insertBefore(nodesIU.divIU,contentMidChild);
 				updateTable();
 				}

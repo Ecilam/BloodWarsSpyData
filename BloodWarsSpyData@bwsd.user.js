@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2015.12.04
+// @version     2015.12.05
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -701,7 +701,7 @@ function updateTable(){
 				if (col[j][1]==1){
 					var v = col[j][0]===0?(new Date(list2[i][2][0])).toLocaleDateString():col[j][0]==1?'':list2[i][2][col[j][0]],
 						td = IU._CreateElement('td',{'class':'BWSDbl'},[v],{},tr);
-					if (col[j][0]==1) IU._CreateElement('a',(list2[i][1]!==null?{'href':'?a=profile&uid='+list2[i][1]}:{}),[list2[i][2][1]],{},td);
+					if (col[j][0]==1) list2[i][1]!==null?IU._CreateElement('a',{'href':'?a=profile&uid='+list2[i][1]},[list2[i][2][1]],{},td):IU._CreateElement('span',{},[list2[i][2][1]],{},td);
 					}
 				}
 			IU._CreateElement('td',{'class':'BWSDDel'},['X'],{'click':[spyDel,list2[i][2][1]]},tr);

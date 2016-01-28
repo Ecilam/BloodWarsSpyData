@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2015.12.05
+// @version     2016.01.28
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -29,6 +29,13 @@ String.prototype.truncate = function(length){
 	if (this.length > length) return this.slice(0, length - 3) + "...";
 	else return this;
 	};
+
+/******************************************************
+* DEBUG
+******************************************************/
+var debug = false,
+	debug_time = Date.now();
+
 /******************************************************
 * OBJET JSONS - JSON
 * - stringification des données
@@ -235,25 +242,29 @@ var L = (function(){
 		"sSpyMsg": ["Rapport de l`opération - cible: (.+)\\.",
 				"Spy report - target: (.+)\\.",
 				"Raport szpiegowski - cel: (.+)\\."],
-		"sSpyTest0":["Cible de l`espionnage: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
+		"sSpyTargetIUD":["Cible de l`espionnage: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
 				"Target: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
 				"Cel szpiegowania: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>"],
-		"sSpyTest1":["Territoire: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
+		"sSpyZone":["Territoire: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
 				"Territory: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
 				"Teren: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>"],
-		"sSpyTest2":["Ordres: <b>([^<>]+)<\\/b><br>Le nombre d`espions: <b>([0-9]+)<\\/b><br>Chances de réussite: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>",
-				"Orders: <b>([^<>]+)<\\/b><br>Number of spies: <b>([0-9]+)<\\/b><br>Chance of success: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>",
-				"Rozkazy: <b>([^<>]+)<\\/b><br>Ilość szpiegów: <b>([0-9]+)<\\/b><br>Szanse powodzenia: <b>([^<>]+) %</b><br><br><b>([^<>]+)<\\/b>"],
-		"sSpyTest3":["NOM: <b>([^<>]+)<\\/b><br>RACE: <b>([^<>]+)<\\/b><br>SEXE: <b>([^<>]+)<\\/b><br><br>Niveau: <b>([0-9]+)<\\/b><br>Pts DE VIE: <b>([0-9]+) / ([0-9]+)<\\/b><br>Pts DE SANG: <b>([0-9]+) / ([0-9]+)<\\/b><br>Argent: <b>([0-9 ]+) LOL</b><br>Population: <b>([0-9 ]+)<\\/b><br>Sang: <b>([0-9 ]+)<\\/b>",
-				"NAME: <b>([^<>]+)<\\/b><br>RACE: <b>([^<>]+)<\\/b><br>SEX: <b>([^<>]+)<\\/b><br><br>Level: <b>([0-9]+)<\\/b><br>HIT POINTS: <b>([0-9]+) / ([0-9]+)<\\/b><br>BLOOD POINTS: <b>([0-9]+) / ([0-9]+)<\\/b><br>Money: <b>([0-9 ]+) Lgo</b><br>People: <b>([0-9 ]+)<\\/b><br>Blood: <b>([0-9 ]+)<\\/b>",
-				"IMIĘ: <b>([^<>]+)<\\/b><br>RASA: <b>([^<>]+)<\\/b><br>PŁEĆ: <b>([^<>]+)<\\/b><br><br>Poziom: <b>([0-9]+)<\\/b><br>PKT\\. ŻYCIA: <b>([0-9]+) / ([0-9]+)<\\/b><br>PKT\\. KRWI: <b>([0-9]+) / ([0-9]+)<\\/b><br>Pieniądze: <b>([0-9 ]+) PLN</b><br>Ludzie: <b>([0-9 ]+)<\\/b><br>Krew: <b>([0-9 ]+)<\\/b>"],
-		"sSpyTest4":["Les niveaux des bâtiments:","Buildings` levels:","Poziomy budynków:"],
+		"sSpyNbspy":["Le nombre d`espions: <b>([0-9]+)<\\/b>",
+				"Number of spies: <b>([0-9]+)<\\/b>",
+				"Ilość szpiegów: <b>([0-9]+)<\\/b>"],
+		"sSpyChance":["Probabilité de ne pas être détecté: <b>([^<>]+) %</b>",
+				"Chance of remaining undetected: <b>([^<>]+) %</b>",
+				"Szansa na pozostanie niewykrytym: <b>([^<>]+) %</b>"],
+		"sSpyOk":["<b>Tes espions sont revenus inaperçus.<\\/b>",
+				"<b>Your spies returned undetected.<\\/b>",
+				"<b>Twoi szpiedzy powrócili niewykryci.<\\/b>"],
+		"sSpyMoney":["Argent: <b>([0-9 ]+) LOL</b>","Money: <b>([0-9 ]+) Lgo</b>","Pieniądze: <b>([0-9 ]+) PLN</b>"],
+		"sSpyPop":["Population: <b>([0-9 ]+)<\\/b>","People: <b>([0-9 ]+)<\\/b>","Ludzie: <b>([0-9 ]+)<\\/b>"],
+		"sSpyBlood":["Sang: <b>([0-9 ]+)<\\/b>","Blood: <b>([0-9 ]+)<\\/b>","Krew: <b>([0-9 ]+)<\\/b>"],
+		"sSpyBats":["Les niveaux des bâtiments:","Buildings` levels:","Poziomy budynków:"],
 		"sSpyBat":["<br>$1: <b>([0-9]+)<\\/b>"],
 		"sBats":[["AGENCE D`EMPLOI","MAISON CLOSE","BOUCHERIE","POSTE DE POLICE","MAISON DE REFUGE","AGENCE DE PROTECTION","GARNISON","TRAFIQUANT D`ARMES","URGENCES","MONT DE PIÉTÉ","QUOTIDIEN LOCAL \"DANSE MACABRE\"","HÔPITAL","CIMETIÈRE","BANQUE DE SANG","CATHÉDRALE","ARMURERIE","MARCHÉ NOIR","ARRÊT TAXI"],
 				["EMPLOYMENT AGENCY","BROTHEL","SLAUGHTERHOUSE","POLICE STATION","VAGRANTS` SHELTER","BODYGUARD AGENCY","GARRISON","ARM SHOP","SURGERY","PAWNSHOP","DAILY NEWSPAPER `NIGHTSHIFT`","HOSPITAL","GRAVEYARD","BLOOD BANK","CHURCH","ARMOURY","OLD MARKET","TAXICAB"],
 				["POŚREDNIAK","DOM PUBLICZNY","RZEŹNIA","POSTERUNEK POLICJI","SCHRONISKO DLA BEZDOMNYCH","AGENCJA OCHRONY","GARNIZON","HANDLARZ BRONIĄ","POGOTOWIE","LOMBARD","DZIENNIK LOKALNY \"NOCNA ZMIANA\"","SZPITAL","CMENTARZ","BANK KRWI","KATEDRA","ZBROJOWNIA","STARY RYNEK","POSTÓJ TAXI"]],
-		"sSpyOk":
-			["L`opération s`est terminée par un succès!","Your spies succeeded!","Operacja zakończona sukcesem!"],
 		 };
 	var langue; // 0 = français par défaut, 1 = anglais, 2 = polonais
 	if (/^http\:\/\/r[0-9]*\.fr\.bloodwars\.net/.test(location.href)) langue = 0;
@@ -731,13 +742,12 @@ else{
 	var p = DATAS._GetPage(),
 		player = DATAS._PlayerName(),
 		IDs = LS._GetVar('BWSD:IDS',{});
-console.debug('BWSDpage :',p);
+if (debug) console.debug('BWSDstart: ',player,IDs,p);
 	// Pages gérées par le script
 	if (['null','pShowProfile','pShowMsg','pShowOther','pShowItems','pServerDeco','pServerUpdate','pServerOther'].indexOf(p)==-1&&player!==null){
-console.debug('BWSDstart: %o %o',player,IDs);
 		// Salle du Trône
 		if (p=='pMain'){
-			var r = DOM._GetFirstNodeTextContent("//div[@class='throne-maindiv']/div/span[@class='reflink']",null);
+			var r = DOM._GetFirstNodeTextContent("//div[@id='content-mid']/div[@id='reflink']/span[@class='reflink']",null);
 			if (r!==null){
 				var r2 = /r\.php\?r=([0-9]+)/.exec(r),
 					ID = _Exist(r2[1])?r2[1]:null;
@@ -788,22 +798,26 @@ console.debug('BWSDstart: %o %o',player,IDs);
 			else if (p=='pMsg'||p=='pMsgSave'){
 				var t = DOM._GetFirstNodeInnerHTML("//div[@class='msg-content ']", null);
 				if (t!==null){
-					var r = new RegExp(L._Get('sSpyTest0')).exec(t),
-						r1 = new RegExp(L._Get('sSpyTest1')).exec(t),
-						r2 = new RegExp(L._Get('sSpyTest2')).exec(t),
-						r3 = new RegExp(L._Get('sSpyTest3')).exec(t),
-						r4 = new RegExp(L._Get('sSpyTest4')).exec(t),
-						qsMid = DOM._QueryString("mid");
-					if (r!==null){// rapport d'espionnage
-						var spyInfo = [0,r[1],[],[],[]];//[type,iud,result,res,bat]
-						if (r2!==null&&r1!==null){
-							spyInfo[0] = r2[4]==L._Get('sSpyOk')?1:-1;
-							spyInfo[2] = [r1[3].replace(/ /g,''),Number(r2[2]),r2[3]];//[zone,espions,%]
-							}
-						if (r3!==null){
-							spyInfo[3] = [r3[9],r3[10],r3[11]];//[LOL,pop,sang]
-							}
-						if (r4!==null){// batiments
+					var r = new RegExp(L._Get('sSpyTargetIUD')).exec(t);// uid cible
+					if (r!==null){
+						var spyInfo = [0,r[1],[],[],[]],//[type,iud,result,res,bat]
+							r1 = new RegExp(L._Get('sSpyZone')).exec(t),// zone
+							r2 = new RegExp(L._Get('sSpyNbspy')).exec(t),// espions
+							r3 = new RegExp(L._Get('sSpyChance')).exec(t),// % réussite
+							r4 = new RegExp(L._Get('sSpyOk')).exec(t),// réussite
+							r5 = new RegExp(L._Get('sSpyMoney')).exec(t),// Argent
+							r6 = new RegExp(L._Get('sSpyPop')).exec(t),// Population
+							r7 = new RegExp(L._Get('sSpyBlood')).exec(t),// Sang
+							r8 = new RegExp(L._Get('sSpyBats')).exec(t),// batiments ?
+							qsMid = DOM._QueryString("mid");
+						if (r1!==null){spyInfo[2][0] = r1[3].replace(/ /g,'');}
+						if (r2!==null){spyInfo[2][1] = Number(r2[1]);}
+						if (r3!==null){spyInfo[2][2] = r3[1];}
+						spyInfo[0] = r4!==null?1:-1;
+						if (r5!==null){spyInfo[3][0] = r5[1];}
+						if (r6!==null){spyInfo[3][1] = r6[1];}
+						if (r7!==null){spyInfo[3][2] = r7[1];}
+						if (r8!==null){
 							for (var i=0;i<L._Get('sBats').length;i++){
 								var bats = new RegExp(L._Get('sSpyBat',L._Get('sBats')[i])).exec(t);
 								spyInfo[4][i] = bats!==null?Number(bats[1]):0;
@@ -859,5 +873,5 @@ console.debug('BWSDstart: %o %o',player,IDs);
 		else alert(L._Get("sUnknowID"));
 		}
 	}
-console.debug('BWSDEnd');
+if (debug) console.debug('BWSDend - time %oms',Date.now()-debug_time);
 })();

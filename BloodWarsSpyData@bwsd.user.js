@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2016.01.28
+// @version     2016.01.29
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -378,7 +378,7 @@ var DATAS = (function(){
 					else if (qsDo=="apply") p="pApplyAliance"; // joindre
 					else if (qsDo=="editclan") p="pEditAliance";
 					else if (qsDo=="applies") p="pAppliesAliance";
-					else if (qsDo===null||qsDo=="leave") p="pOAliance";
+					else if (qsDo==null||qsDo=="leave"||qsDo=="togrec") p="pOAliance";
 					else if (qsDo=="view"){
 						var r = DOM._GetFirstNode("//div[@class='top-options']/span[@class='lnk']");
 						if (r!==null) p="pOAliance";

@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2016.01.29
+// @version     2016.03.29
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -297,31 +297,15 @@ var L = (function(){
 * Chaque fonction retourne 'null' en cas d'échec
 ******************************************************/
 var DATAS = (function(){
-	function GetTimeDiff(){
-		var stTime = new Date(),
-			r = document.getElementsByTagName('script');
-		for (var i=0;i<r.length;i++){
-			var r2 = /var timeDiff = ([0-9]+) - Math\.floor\(stTime\.getTime\(\)\/1000\) \+ ([0-9]+) \+ stTime\.getTimezoneOffset\(\)\*60;/.exec(r[i].textContent);
-			if (r2!==null) return (parseInt(r2[1])-Math.floor(stTime.getTime()/1000)+parseInt(r2[2])+stTime.getTimezoneOffset()*60);
-			}
-		return null;
-		}
-	function GetPlayerName(){
-		return DOM._GetFirstNodeTextContent("//div[@class='stats-player']/a[@class='me']", null);
-		}
-	var timeDiff = GetTimeDiff(),
-		playerName = GetPlayerName();
+	var gameTime = _Exist(window.stTime)&&_Exist(window.timeDiff)?new Date(window.stTime.getTime()+window.timeDiff*1000):null;
 	return {
 	/* données du serveur */
 		_Time: function(){
-			var d = new Date();
-			if (timeDiff!==null)	d.setTime(d.getTime()+timeDiff*1000);
-			else d = null;
-			return d;
+			return gameTime;
 			},
 	/* données du joueur */
 		_PlayerName: function(){
-			return playerName;
+			return DOM._GetFirstNodeTextContent("//div[@class='stats-player']/a[@class='me']", null);
 			},
 	/* Données diverses	*/
 		_GetPage: function(){

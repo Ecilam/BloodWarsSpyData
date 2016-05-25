@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2016.03.29
+// @version     2016.05.25
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -237,8 +237,8 @@ var L = (function(){
 				["DATA","IMIĘ","STREFA","PO","DP","RZ","PP","SB","AO","GA","HB","PT","LO","DL","SZ","CM","BK","KA","ZB","SR","PT"]],
 		"sTriAdrTest":["([0-9]+)\\/([0-9]+)\\/([0-9]+)"],
 		// chaines pour l'espionnage
-		"sSpyTime":["timeFields\\.$1 = ([0-9]+)"],
-		"sMidMsg":["a=msg&do=view&mid=([0-9]+)"],
+		"sSpyTime":["registerTimer\\('$1', ([0-9]+)\\)"], //				gameTimers.registerTimer('spy_0', 83)
+		"sMidMsg":["addMsgId\\(([0-9]+)\\)"], //						.addMsgId(125633417)
 		"sSpyMsg": ["Rapport de l`opération - cible: (.+)\\.",
 				"Spy report - target: (.+)\\.",
 				"Raport szpiegowski - cel: (.+)\\."],
@@ -297,7 +297,14 @@ var L = (function(){
 * Chaque fonction retourne 'null' en cas d'échec
 ******************************************************/
 var DATAS = (function(){
-	var gameTime = _Exist(window.stTime)&&_Exist(window.timeDiff)?new Date(window.stTime.getTime()+window.timeDiff*1000):null;
+	var serverTime = window.serverTime,
+    serverOffset = window.serverOffset,
+    clientTimeData =  new Date(),
+    clientTime = Math.floor(clientTimeData.getTime() / 1000),
+    clientOffset = clientTimeData.getTimezoneOffset() * 60,
+    diff = _Exist(serverTime) && _Exist(serverOffset)? (serverTime - clientTime + serverOffset + clientOffset) * 1000 : null,
+		gameTime = diff !== null ? new Date(clientTimeData.getTime() + diff) : null;
+
 	return {
 	/* données du serveur */
 		_Time: function(){
@@ -822,6 +829,7 @@ if (debug) console.debug('BWSDstart: ',player,IDs,p);
 							r2 = new RegExp(L._Get('sMidMsg')).exec(spyScript),
 							playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']",null,node),
 							msgDate = DATAS._Time();
+if (debug) console.debug('pAmbushRoot', r, r2, playerVS, msgDate);
 						if (msgDate!==null&&r!==null&&r2!==null&&playerVS!==null){
 							msgDate.setTime(msgDate.getTime()+r[1]*1000);
 							updateLogS(playerVS,r2[1],msgDate,null);

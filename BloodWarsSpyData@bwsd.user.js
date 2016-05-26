@@ -3,7 +3,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2016.05.25
+// @version     2016.05.26
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -237,8 +237,7 @@ var L = (function(){
 				["DATA","IMIĘ","STREFA","PO","DP","RZ","PP","SB","AO","GA","HB","PT","LO","DL","SZ","CM","BK","KA","ZB","SR","PT"]],
 		"sTriAdrTest":["([0-9]+)\\/([0-9]+)\\/([0-9]+)"],
 		// chaines pour l'espionnage
-		"sSpyTime":["registerTimer\\('$1', ([0-9]+)\\)"], //				gameTimers.registerTimer('spy_0', 83)
-		"sMidMsg":["addMsgId\\(([0-9]+)\\)"], //						.addMsgId(125633417)
+		"sSpyScript":["registerTimer\\('$1', ([0-9]+)\\)(?:(?!addMsgId)[^])*addMsgId\\(([0-9]+)\\)"],
 		"sSpyMsg": ["Rapport de l`opération - cible: (.+)\\.",
 				"Spy report - target: (.+)\\.",
 				"Raport szpiegowski - cel: (.+)\\."],
@@ -824,15 +823,12 @@ if (debug) console.debug('BWSDstart: ',player,IDs,p);
 					var node = spyaction.snapshotItem(i),
 						spyId = node.getAttribute('id'),
 						spyScript = DOM._GetFirstNodeInnerHTML("./parent::td/script",null,node);
-					if (spyScript!==null){
-						var r = new RegExp(L._Get('sSpyTime',spyId)).exec(spyScript),
-							r2 = new RegExp(L._Get('sMidMsg')).exec(spyScript),
-							playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']",null,node),
-							msgDate = DATAS._Time();
-if (debug) console.debug('pAmbushRoot', r, r2, playerVS, msgDate);
-						if (msgDate!==null&&r!==null&&r2!==null&&playerVS!==null){
-							msgDate.setTime(msgDate.getTime()+r[1]*1000);
-							updateLogS(playerVS,r2[1],msgDate,null);
+					if (spyScript !== null){
+						var r = new RegExp(L._Get('sSpyScript',spyId)).exec(spyScript),
+							playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']",null,node);
+if (debug) console.debug('pAmbushRoot', spyScript, r, playerVS, DATAS._Time());
+						if (DATAS._Time() !== null && r !== null && playerVS !== null){
+							updateLogS(playerVS, r[2], new Date(DATAS._Time().getTime() + Number(r[1])*1000), null);
 							}
 						}
 					}

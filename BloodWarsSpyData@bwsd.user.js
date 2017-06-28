@@ -2,7 +2,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2017.06.27
+// @version     2017.06.28
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -828,7 +828,30 @@
       }
     }
   }
-
+  function observerList()
+  {
+    var ttable = document.getElementById('messagesTable');
+    if (ttable !== null)
+    {
+      var tlist = DOM._GetNodes("./tbody/tr[not(@class='hidden')]", ttable);
+      for (var i = 0; i < tlist.snapshotLength; i++)
+      {
+        var node = tlist.snapshotItem(i);
+        var msg = DOM._GetFirstNodeTextContent("./td[2]/a", '', node).trim();
+        var msgDate = DOM._GetFirstNodeTextContent("./td[4]", '', node).trim();
+        var msgId = DOM._GetFirstNode("./td[1]/input", node);
+        var v = new RegExp("([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})").exec(msgDate);
+        msgDate = (v != null) ? new Date(v[1], v[2] - 1, v[3], v[4], v[5], v[6]) : null;
+        if (msg !== '' && msgDate !== null && msgId !== null)
+        {
+          var msgId = msgId.getAttribute('id').replace('msgid_', '');
+          var m1 = new RegExp(L._Get('sSpyMsg')).exec(msg);
+          if (m1 !== null) updateLogS(m1[1], msgId, msgDate, null);
+        }
+      }
+      updateTable();
+    }
+  }
   function updateLogS(player, msgId, msgTime, spyInfo)
   {
     msgTime = (_Type(msgTime) == 'Date') ? msgTime.getTime() : null;
@@ -898,25 +921,45 @@
           PREF._Raz();
           PREF._Set('set', set);
         }
+        // init IU
+        var nodeOptions = DOM._GetFirstNode("//div[@class='remark']"),
+          contentMid = DOM._GetFirstNode("//div[@id='content-mid']"),
+          contentMidChild = DOM._GetFirstNode("//div[@id='content-mid']/*");
+        if (nodeOptions !== null && contentMidChild !== null)
+        {
+          var nodeTitle = IU._CreateElements(
+          {
+            '1': ['a', { 'class': 'remark', 'target': '_blank', 'href': '#', 'onclick': 'return false;' }, [L._Get('sTitle')], { 'click': [showIU] }, null],
+            '2': ['span', {}, [' | '], {}, null]
+          });
+          nodeOptions.insertBefore(nodeTitle['2'], nodeOptions.firstChild);
+          nodeOptions.insertBefore(nodeTitle['1'], nodeOptions.firstChild);
+          var nodesIU = IU._CreateElements(
+          {
+            'divIU': ['div', { 'id': 'BWSD', 'style': 'display:' + (set[0] == 1 ? 'block;' : 'none;') }, [], {}, null],
+            'fieldset': ['fieldset', { 'class': 'equip' }, [], {}, 'divIU'],
+            'legend': ['legend', { 'class': 'arcane-header' }, [], {}, 'fieldset'],
+            'l1': ['span', {}, [L._Get('sTitle') + ' '], {}, 'legend'],
+            'l2': ['a', { 'target': '_blank', 'href': 'https://github.com/Ecilam/BloodWarsSpyData' }, [(typeof(GM_info) == 'object' ? GM_info.script.version : '?')], {}, 'legend'],
+            'menu': ['div', { 'style': 'width:100%' }, [], {}, 'fieldset'],
+            'tableS': ['table', { 'style': 'border-collapse:collapse;width:100%' }, [], {}, 'fieldset'],
+            'theadS': ['thead', {}, [], {}, 'tableS'],
+            'tbodyS': ['tbody', {}, [], {}, 'tableS'],
+            'br': ['br', {}, [], {}, 'divIU']
+          });
+          contentMid.insertBefore(nodesIU.divIU, contentMidChild);
+        }
         if (p == 'pMsgList' || p == 'pMsgSaveList')
         {
-          var r = DOM._GetNodes("(//div[@id='content-mid']//tr[@class='tblheader']/ancestor::table)[last()]//tr[not(@class='tblheader')]");
-          for (var i = 0; i < r.snapshotLength; i++)
+          var ttable = document.getElementById('messagesTable');
+          if (ttable !== null)
           {
-            var node = r.snapshotItem(i);
-            var msg = DOM._GetFirstNodeTextContent(".//td[2]/a", '', node).trim();
-            var msgDate = DOM._GetFirstNodeTextContent(".//td[4]", '', node).trim();
-            var msgId = DOM._GetFirstNode(".//td[1]/input", node);
-            // conversion au format Date
-            var v = new RegExp("([0-9]{4})-([0-9]{2})-([0-9]{2}) ([0-9]{2}):([0-9]{2}):([0-9]{2})").exec(msgDate);
-            msgDate = (v !== null) ? new Date(v[1], v[2] - 1, v[3], v[4], v[5], v[6]) : null;
-            if (msg !== '' && msgDate !== null && msgId !== null)
+            var tbody = DOM._GetFirstNode('./tbody', ttable);
+            if (tbody !== null)
             {
-              var msgId = msgId.getAttribute('id').replace('msgid_', '');
-              var m1 = new RegExp(L._Get('sSpyMsg')).exec(msg);
-if (debug) console.debug('msgId, m1 : ', msgId, m1);
-              // messages d'espionnage ?
-              if (m1 !== null) updateLogS(m1[1], msgId, msgDate, null);
+              observerList();
+              var observer = new MutationObserver(observerList);
+              observer.observe(tbody, { childList: true, attributes: true, subtree: true });
             }
           }
         }
@@ -969,7 +1012,6 @@ if (debug) console.debug('msgId, m1 : ', msgId, m1);
             {
               var r = new RegExp(L._Get('sSpyScript', spyId)).exec(spyScript),
                 playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']", null, node);
-if (debug) console.debug('pAmbushRoot', spyScript, r, playerVS, DATAS._Time());
               if (DATAS._Time() !== null && r !== null && playerVS !== null)
               {
                 updateLogS(playerVS, r[2], new Date(DATAS._Time().getTime() + Number(r[1]) * 1000), null);
@@ -977,35 +1019,7 @@ if (debug) console.debug('pAmbushRoot', spyScript, r, playerVS, DATAS._Time());
             }
           }
         }
-        // init IU
-        var nodeOptions = DOM._GetFirstNode("//div[@class='remark']"),
-          contentMid = DOM._GetFirstNode("//div[@id='content-mid']"),
-          contentMidChild = DOM._GetFirstNode("//div[@id='content-mid']/*");
-        if (nodeOptions !== null && contentMidChild !== null)
-        {
-          var nodeTitle = IU._CreateElements(
-          {
-            '1': ['a', { 'class': 'remark', 'target': '_blank', 'href': '#', 'onclick': 'return false;' }, [L._Get('sTitle')], { 'click': [showIU] }, null],
-            '2': ['span', {}, [' | '], {}, null]
-          });
-          nodeOptions.insertBefore(nodeTitle['2'], nodeOptions.firstChild);
-          nodeOptions.insertBefore(nodeTitle['1'], nodeOptions.firstChild);
-          var nodesIU = IU._CreateElements(
-          {
-            'divIU': ['div', { 'id': 'BWSD', 'style': 'display:' + (set[0] == 1 ? 'block;' : 'none;') }, [], {}, null],
-            'fieldset': ['fieldset', { 'class': 'equip' }, [], {}, 'divIU'],
-            'legend': ['legend', { 'class': 'arcane-header' }, [], {}, 'fieldset'],
-            'l1': ['span', {}, [L._Get('sTitle') + ' '], {}, 'legend'],
-            'l2': ['a', { 'target': '_blank', 'href': 'https://github.com/Ecilam/BloodWarsSpyData' }, [(typeof(GM_info) == 'object' ? GM_info.script.version : '?')], {}, 'legend'],
-            'menu': ['div', { 'style': 'width:100%' }, [], {}, 'fieldset'],
-            'tableS': ['table', { 'style': 'border-collapse:collapse;width:100%' }, [], {}, 'fieldset'],
-            'theadS': ['thead', {}, [], {}, 'tableS'],
-            'tbodyS': ['tbody', {}, [], {}, 'tableS'],
-            'br': ['br', {}, [], {}, 'divIU']
-          });
-          contentMid.insertBefore(nodesIU.divIU, contentMidChild);
-          updateTable();
-        }
+        updateTable();
       }
       else alert(L._Get("sUnknowID"));
     }

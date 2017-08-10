@@ -2,17 +2,17 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2017.06.28
+// @version     2017.08.10
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
 // @license     GPL version 3 ou suivantes; http://www.gnu.org/copyleft/gpl.html
 // @homepageURL https://github.com/Ecilam/BloodWarsSpyData
 // @supportURL  https://github.com/Ecilam/BloodWarsSpyData/issues
-// @include     /^http:\/\/r[0-9]*\.fr\.bloodwars\.net\/.*$/
-// @include     /^http:\/\/r[0-9]*\.bloodwars\.net\/.*$/
-// @include     /^http:\/\/r[0-9]*\.bloodwars\.interia\.pl\/.*$/
-// @include     /^http:\/\/beta[0-9]*\.bloodwars\.net\/.*$/
+// @include     /^https:\/\/r[0-9]*\.fr\.bloodwars\.net\/.*$/
+// @include     /^https:\/\/r[0-9]*\.bloodwars\.net\/.*$/
+// @include     /^https:\/\/r[0-9]*\.bloodwars\.interia\.pl\/.*$/
+// @include     /^https:\/\/beta[0-9]*\.bloodwars\.net\/.*$/
 // @grant       none
 // ==/UserScript==
 (function()
@@ -311,9 +311,9 @@
 				["POŚREDNIAK", "DOM PUBLICZNY", "RZEŹNIA", "POSTERUNEK POLICJI", "SCHRONISKO DLA BEZDOMNYCH", "AGENCJA OCHRONY", "GARNIZON", "HANDLARZ BRONIĄ", "POGOTOWIE", "LOMBARD", "DZIENNIK LOKALNY \"NOCNA ZMIANA\"", "SZPITAL", "CMENTARZ", "BANK KRWI", "KATEDRA", "ZBROJOWNIA", "STARY RYNEK", "POSTÓJ TAXI"]],
     };
     var langue; // 0 = français par défaut, 1 = anglais, 2 = polonais
-    if (/^http\:\/\/r[0-9]*\.fr\.bloodwars\.net/.test(location.href)) langue = 0;
-    else if (/^http\:\/\/r[0-9]*\.bloodwars\.net/.test(location.href)) langue = 1;
-    else if (/^http\:\/\/r[0-9]*\.bloodwars\.interia\.pl/.test(location.href) || /^http\:\/\/beta[0-9]*\.bloodwars\.net/.test(location.href)) langue = 2;
+    if (/^https\:\/\/r[0-9]*\.fr\.bloodwars\.net/.test(location.href)) langue = 0;
+    else if (/^https\:\/\/r[0-9]*\.bloodwars\.net/.test(location.href)) langue = 1;
+    else if (/^https\:\/\/r[0-9]*\.bloodwars\.interia\.pl/.test(location.href) || /^https\:\/\/beta[0-9]*\.bloodwars\.net/.test(location.href)) langue = 2;
     else langue = 0;
     return {
       //public stuff

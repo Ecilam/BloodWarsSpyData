@@ -2,7 +2,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2017.08.10
+// @version     2018.10.18
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2014, Ecilam
@@ -965,7 +965,7 @@
         }
         else if (p == 'pMsg' || p == 'pMsgSave')
         {
-          var t = DOM._GetFirstNodeInnerHTML("//div[@class='msg-content ']", null);
+          var t = DOM._GetFirstNodeInnerHTML("//div[@class='msg-content']", null);
           if (t !== null)
           {
             var r = new RegExp(L._Get('sSpyTargetIUD')).exec(t); // uid cible

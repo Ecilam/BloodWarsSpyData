@@ -2,7 +2,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2019.03.01
+// @version     2019.03.01a
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2019, Ecilam
@@ -304,10 +304,10 @@
       "sSpyMoney": ["Argent: <b>([0-9 ]+) LOL</b>", "Money: <b>([0-9 ]+) Lgo</b>", "Pieniądze: <b>([0-9 ]+) PLN</b>"],
       "sSpyPop": ["Population: <b>([0-9 ]+)<\\/b>", "People: <b>([0-9 ]+)<\\/b>", "Ludzie: <b>([0-9 ]+)<\\/b>"],
       "sSpyBlood": ["Sang: <b>([0-9 ]+)<\\/b>", "Blood: <b>([0-9 ]+)<\\/b>", "Krew: <b>([0-9 ]+)<\\/b>"],
-      "sSpyBats": ["Les niveaux des bâtiments:", "Buildings` levels:", "Poziomy budynków:"],
+      "sSpyBats": ["Les niveaux des bâtiments:", "Buildings’ levels:", "Poziomy budynków:"],
       "sSpyBat": ["<br>$1: <b>([0-9]+)<\\/b>"],
       "sBats": [["AGENCE D’EMPLOI", "MAISON CLOSE", "BOUCHERIE", "POSTE DE POLICE", "MAISON DE REFUGE", "AGENCE DE PROTECTION", "GARNISON", "TRAFIQUANT D’ARMES", "URGENCES", "MONT DE PIÉTÉ", "QUOTIDIEN LOCAL \"DANSE MACABRE\"", "HÔPITAL", "CIMETIÈRE", "BANQUE DE SANG", "CATHÉDRALE", "ARMURERIE", "MARCHÉ NOIR", "ARRÊT TAXI"],
-				["EMPLOYMENT AGENCY", "BROTHEL", "SLAUGHTERHOUSE", "POLICE STATION", "VAGRANTS` SHELTER", "BODYGUARD AGENCY", "GARRISON", "ARM SHOP", "SURGERY", "PAWNSHOP", "DAILY NEWSPAPER `NIGHTSHIFT`", "HOSPITAL", "GRAVEYARD", "BLOOD BANK", "CHURCH", "ARMOURY", "OLD MARKET", "TAXICAB"],
+				["EMPLOYMENT AGENCY", "BROTHEL", "SLAUGHTERHOUSE", "POLICE STATION", "VAGRANTS’ SHELTER", "BODYGUARD AGENCY", "GARRISON", "ARM SHOP", "SURGERY", "PAWNSHOP", "DAILY NEWSPAPER ’NIGHTSHIFT’", "HOSPITAL", "GRAVEYARD", "BLOOD BANK", "CHURCH", "ARMOURY", "OLD MARKET", "TAXICAB"],
 				["POŚREDNIAK", "DOM PUBLICZNY", "RZEŹNIA", "POSTERUNEK POLICJI", "SCHRONISKO DLA BEZDOMNYCH", "AGENCJA OCHRONY", "GARNIZON", "HANDLARZ BRONIĄ", "POGOTOWIE", "LOMBARD", "DZIENNIK LOKALNY \"NOCNA ZMIANA\"", "SZPITAL", "CMENTARZ", "BANK KRWI", "KATEDRA", "ZBROJOWNIA", "STARY RYNEK", "POSTÓJ TAXI"]],
     };
     var langue; // 0 = français par défaut, 1 = anglais, 2 = polonais
@@ -541,7 +541,7 @@
             else if (qsDo == "vac") p = "pSettingsVac";
             else if (qsDo == "delchar") p = "pSettingsDelchar";
           }
-          // Page Rapporter à l`opérateur
+          // Page Rapporter à l’opérateur
           else if (qsA == "report") p = "pReport";
           // Page Copyright
           else if (qsA == "developer") p = "pCopyright";

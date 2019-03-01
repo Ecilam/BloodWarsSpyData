@@ -2,10 +2,10 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2018.10.18
+// @version     2019.03.01
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
-// @copyright   2012-2014, Ecilam
+// @copyright   2012-2019, Ecilam
 // @license     GPL version 3 ou suivantes; http://www.gnu.org/copyleft/gpl.html
 // @homepageURL https://github.com/Ecilam/BloodWarsSpyData
 // @supportURL  https://github.com/Ecilam/BloodWarsSpyData/issues
@@ -256,10 +256,10 @@
   {
     var locStr = {
       //DATAS
-      "sDeconnecte": ["Vous avez été déconnecté en raison d`une longue inactivité.",
+      "sDeconnecte": ["Vous avez été déconnecté en raison d’une longue inactivité.",
 			"You have been logged out because of inactivity.",
 			"Nastąpiło wylogowanie z powodu zbyt długiej bezczynności."],
-      "sCourtePause": ["Une courte pause est en court en raison de l`actualisation du classement général",
+      "sCourtePause": ["Une courte pause est en court en raison de l’actualisation du classement général",
 			"Please wait a moment while the rankings are being updated.",
 			"Trwa przerwa związana z aktualizacją rankingu gry."],
       //INIT
@@ -283,16 +283,16 @@
       "sTriAdrTest": ["([0-9]+)\\/([0-9]+)\\/([0-9]+)"],
       // chaines pour l'espionnage
       "sSpyScript": ["registerTimer\\('$1', ([0-9]+)\\)(?:(?!addMsgId)[^])*addMsgId\\(([0-9]+)\\)"],
-      "sSpyMsg": ["Rapport de l`opération - cible: (.+)\\.",
+      "sSpyMsg": ["Rapport de l’opération - cible: (.+)\\.",
 				"Spy report - target: (.+)\\.",
 				"Raport szpiegowski - cel: (.+)\\."],
-      "sSpyTargetIUD": ["Cible de l`espionnage: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
+      "sSpyTargetIUD": ["Cible de l’espionnage: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
 				"Target: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>",
 				"Cel szpiegowania: <a class=\"players\" href=\"\\?a=profile&amp;uid=([0-9]+)\"><b>([^<>]+)<\\/b><\\/a>"],
       "sSpyZone": ["Territoire: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
 				"Territory: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>",
 				"Teren: <a href=\"\\?a=townview&amp;strefa=([0-9]+)&amp;sektor=([0-9]+)\">([^<>]+)<\\/a>"],
-      "sSpyNbspy": ["Le nombre d`espions: <b>([0-9]+)<\\/b>",
+      "sSpyNbspy": ["Le nombre d’espions: <b>([0-9]+)<\\/b>",
 				"Number of spies: <b>([0-9]+)<\\/b>",
 				"Ilość szpiegów: <b>([0-9]+)<\\/b>"],
       "sSpyChance": ["Probabilité de ne pas être détecté: <b>([^<>]+) %</b>",
@@ -306,7 +306,7 @@
       "sSpyBlood": ["Sang: <b>([0-9 ]+)<\\/b>", "Blood: <b>([0-9 ]+)<\\/b>", "Krew: <b>([0-9 ]+)<\\/b>"],
       "sSpyBats": ["Les niveaux des bâtiments:", "Buildings` levels:", "Poziomy budynków:"],
       "sSpyBat": ["<br>$1: <b>([0-9]+)<\\/b>"],
-      "sBats": [["AGENCE D`EMPLOI", "MAISON CLOSE", "BOUCHERIE", "POSTE DE POLICE", "MAISON DE REFUGE", "AGENCE DE PROTECTION", "GARNISON", "TRAFIQUANT D`ARMES", "URGENCES", "MONT DE PIÉTÉ", "QUOTIDIEN LOCAL \"DANSE MACABRE\"", "HÔPITAL", "CIMETIÈRE", "BANQUE DE SANG", "CATHÉDRALE", "ARMURERIE", "MARCHÉ NOIR", "ARRÊT TAXI"],
+      "sBats": [["AGENCE D’EMPLOI", "MAISON CLOSE", "BOUCHERIE", "POSTE DE POLICE", "MAISON DE REFUGE", "AGENCE DE PROTECTION", "GARNISON", "TRAFIQUANT D’ARMES", "URGENCES", "MONT DE PIÉTÉ", "QUOTIDIEN LOCAL \"DANSE MACABRE\"", "HÔPITAL", "CIMETIÈRE", "BANQUE DE SANG", "CATHÉDRALE", "ARMURERIE", "MARCHÉ NOIR", "ARRÊT TAXI"],
 				["EMPLOYMENT AGENCY", "BROTHEL", "SLAUGHTERHOUSE", "POLICE STATION", "VAGRANTS` SHELTER", "BODYGUARD AGENCY", "GARRISON", "ARM SHOP", "SURGERY", "PAWNSHOP", "DAILY NEWSPAPER `NIGHTSHIFT`", "HOSPITAL", "GRAVEYARD", "BLOOD BANK", "CHURCH", "ARMOURY", "OLD MARKET", "TAXICAB"],
 				["POŚREDNIAK", "DOM PUBLICZNY", "RZEŹNIA", "POSTERUNEK POLICJI", "SCHRONISKO DLA BEZDOMNYCH", "AGENCJA OCHRONY", "GARNIZON", "HANDLARZ BRONIĄ", "POGOTOWIE", "LOMBARD", "DZIENNIK LOKALNY \"NOCNA ZMIANA\"", "SZPITAL", "CMENTARZ", "BANK KRWI", "KATEDRA", "ZBROJOWNIA", "STARY RYNEK", "POSTÓJ TAXI"]],
     };
@@ -894,7 +894,9 @@
           if (ID !== null)
           {
             for (var i in IDs)
-              if (IDs[i] == ID) delete IDs[i]; // en cas de changement de nom
+            {
+              if (IDs.hasOwnProperty(i) && IDs[i] == ID) delete IDs[i]; // en cas de changement de nom
+            }
             IDs[player] = ID;
             LS._SetVar('BWSD:IDS', IDs);
           }

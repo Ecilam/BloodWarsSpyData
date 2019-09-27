@@ -2,7 +2,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2019.03.01a
+// @version     2019.09.27
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2019, Ecilam
@@ -18,13 +18,13 @@
 (function()
 {
   "use strict";
-
+  var debugTime = Date.now();
+  var debug = false;
   function _Type(v)
   {
     var type = Object.prototype.toString.call(v);
     return type.slice(8, type.length - 1);
   }
-
   function _Exist(v)
   {
     return _Type(v) != 'Undefined';
@@ -34,13 +34,6 @@
     if (this.length > length) return this.slice(0, length - 3) + "...";
     else return this;
   };
-
-  /******************************************************
-   * DEBUG
-   ******************************************************/
-  var debug = false,
-    debug_time = Date.now();
-
   /******************************************************
    * OBJET JSONS - JSON
    * - stringification des données
@@ -385,10 +378,6 @@
           // page extérieur
           if (path != "/")
           {
-            if (path == "/showmsg.php" && qsA === null && qsMid !== null) p = "pShowMsg";
-            else if (path == "/showmsg.php" && qsA == "profile") p = "pShowProfile";
-            else if (path == "/test_items.php") p = "pShowItems";
-            else p = "pShowOther";
           }
           // page interne
           // Profile
@@ -406,8 +395,24 @@
           else if (qsA == "premium")
           {
             if (qsDo === null || qsDo == "prolong") p = "pProlongPremium";
-            else if (qsDo == "services") p = "pServicesPremium";
+            else if (qsDo == "services")
+            {
+              var qsSub = DOM._QueryString('sub');
+              if (qsSub === 'charon')
+              {
+                p = 'pServicesCharon';
+              }
+              else if (qsSub === null)
+              {
+                p = 'pServicesPremium';
+              }
+            }
             else if (qsDo == "history") p = "pHistoryPremium";
+          }
+          // loterie
+          else if (qsA === 'raffle')
+          {
+            p = 'pRaffle';
           }
           // Salle du Trône
           else if (qsA === null || qsA == "main") p = "pMain";
@@ -440,12 +445,20 @@
           // Souvenir
           else if (qsA == "sshop") p = "pSshop";
           // Armurerie
-          else if (qsA == "equip") p = "pEquip";
+          else if (qsA == "equip")
+          {
+            if (qsDo == null) p = "pEquip";
+            else if (qsDo == "archive") p = "pArchive";
+          }
           // Talismans
           else if (qsA == "talizman")
           {
-            if (qsDo === null || qsDo == "main") p = "pTalisman";
+            if (qsDo == null || qsDo == "main") p = "pTalisman";
             else if (qsDo == "runes") p = "pRunes";
+            else if (qsDo == "cube") p = "pCubeRunes";
+            else if (qsDo == "destroy") p = "pDestroyRunes";
+            else if (qsDo == "forge") p = "pForgeRunes";
+            else if (qsDo == "epicDestroy") p = "pEpicDestroyRunes";
           }
           // Commerce
           else if (qsA == "trade")
@@ -475,9 +488,9 @@
           else if (qsA == "ambush")
           {
             var qsOpt = DOM._QueryString("opt");
-            if (qsOpt === null) p = "pAmbushRoot";
+            if (qsOpt == null || qsOpt == "atk") p = "pAmbushAtk";
             else if (qsOpt == "spy") p = "pAmbushSpy";
-            else if (qsOpt == "atk") p = "pAmbushAtk";
+            else if (qsOpt == "main") p = "pAmbushMain";
             else if (qsOpt == "ambush") p = "pAmbush";
           }
           // Quêtes
@@ -487,6 +500,11 @@
             if (qbsel === true) p = "pQuestSel";
             else if (DOM._GetFirstNode("//*[@id='quest_timeleft']") !== null) p = "pQuestProgress";
             else p = "pQuestLaunch";
+          }
+          // Le Voyage
+          else if (qsA == "journey")
+          {
+            p = "pJourney";
           }
           // Expéditions
           else if (qsA == "cevent")
@@ -507,7 +525,14 @@
           // Page L’Arène
           else if (qsA == "newarena") p = "pArena";
           // Page Missions
-          else if (qsA == "tasks") p = "pTasks";
+          else if (qsA == "tasks")
+          {
+            if (qsDo === null || qsDo === 'daily')
+            {
+              p = "pDailyTasks";
+            }
+            else if (qsDo === 'zone') p = "pZoneTasks";
+          }
           // Page des messages
           else if (qsA == "msg")
           {
@@ -1002,7 +1027,7 @@
             }
           }
         }
-        else if (p == 'pAmbushRoot')
+        else if (p == 'pAmbushMain')
         {
           var spyaction = DOM._GetNodes("//div[@id='content-mid']//tr/td/span[@class='spyinprogress']");
           for (var i = 0; i < spyaction.snapshotLength; i++)
@@ -1026,5 +1051,5 @@
       else alert(L._Get("sUnknowID"));
     }
   }
-if (debug) console.debug('BWSDend - time %oms', Date.now() - debug_time);
+if (debug) console.debug('BWSDend - time %oms', Date.now() - debugTime);
 })();

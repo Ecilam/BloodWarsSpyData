@@ -2,7 +2,7 @@
 // ==UserScript==
 // @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2019.09.27
+// @version     2020.09.02
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @copyright   2012-2019, Ecilam
@@ -20,14 +20,14 @@
   "use strict";
   var debugTime = Date.now();
   var debug = false;
-  function _Type(v)
-  {
-    var type = Object.prototype.toString.call(v);
-    return type.slice(8, type.length - 1);
-  }
-  function _Exist(v)
-  {
-    return _Type(v) != 'Undefined';
+  /**
+   * @method exist
+   * Test l'existence d'une valeur
+   * @param {*} v la valeur à tester
+   * @return {Boolean} vrai si 'undefined'
+   */
+  function exist(v) {
+    return (v !== undefined && typeof v !== 'undefined');
   }
   String.prototype.truncate = function(length)
   {
@@ -42,7 +42,7 @@
   {
     function reviver(key, v)
     {
-      if (_Type(v) == 'String')
+      if (typeof v === 'string')
       {
         var a = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2}(?:\.\d*)?)Z$/.exec(v);
         if (a !== null) return new Date(Date.UTC(+a[1], +a[2] - 1, +a[3], +a[4], +a[5], +a[6]));
@@ -116,7 +116,7 @@
     return {
       _GetNodes: function(path, root)
       {
-        return (_Exist(root) && root === null) ? null : document.evaluate(path, (_Exist(root) ? root : document), null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+        return (exist(root) && root === null) ? null : document.evaluate(path, (exist(root) ? root : document), null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
       },
       _GetFirstNode: function(path, root)
       {
@@ -151,7 +151,7 @@
           offset = reg.exec(url);
         if (offset !== null)
         {
-          offset = _Exist(offset[2]) ? offset[2] : true;
+          offset = exist(offset[2]) ? offset[2] : true;
         }
         return offset;
       }
@@ -166,12 +166,12 @@
     return {
       _CreateElements: function(list, oldList)
       {
-        var r = _Exist(oldList) ? oldList : {};
+        var r = exist(oldList) ? oldList : {};
         for (var key in list)
         {
           if (list.hasOwnProperty(key))
           {
-            var node = _Exist(r[list[key][4]]) ? r[list[key][4]] : list[key][4];
+            var node = exist(r[list[key][4]]) ? r[list[key][4]] : list[key][4];
             r[key] = this._CreateElement(list[key][0], list[key][1], list[key][2], list[key][3], node);
           }
         }
@@ -184,7 +184,7 @@
         {
           if (attributes.hasOwnProperty(key))
           {
-            if (_Type(attributes[key]) != 'Boolean') r.setAttribute(key, attributes[key]);
+            if (typeof attributes[key] !== 'boolean') r.setAttribute(key, attributes[key]);
             else if (attributes[key] === true) r.setAttribute(key, key.toString());
           }
         }
@@ -197,7 +197,7 @@
         }
         for (var i = 0; i < content.length; i++)
         {
-          if (_Type(content[i]) === 'Object') r.appendChild(content[i]);
+          if (typeof content[i] === 'Object') r.appendChild(content[i]);
           else r.textContent += content[i];
         }
         if (node !== null) node.appendChild(r);
@@ -318,8 +318,8 @@
       _Get: function(key)
       {
         var r = locStr[key];
-        if (!_Exist(r)) throw new Error("L::Error:: la clé n'existe pas : " + key);
-        if (_Exist(r[langue])) r = r[langue];
+        if (!exist(r)) throw new Error("L::Error:: la clé n'existe pas : " + key);
+        if (exist(r[langue])) r = r[langue];
         else r = r[0];
         for (var i = arguments.length - 1; i >= 1; i--)
         {
@@ -337,19 +337,19 @@
    ******************************************************/
   var DATAS = (function()
   {
-    var serverTime = window.serverTime,
-      serverOffset = window.serverOffset,
-      clientTimeData = new Date(),
-      clientTime = Math.floor(clientTimeData.getTime() / 1000),
-      clientOffset = clientTimeData.getTimezoneOffset() * 60,
-      diff = _Exist(serverTime) && _Exist(serverOffset) ? (serverTime - clientTime + serverOffset + clientOffset) * 1000 : null,
-      gameTime = diff !== null ? new Date(clientTimeData.getTime() + diff) : null;
-
+    var clientTimeData = new Date();
+    var clientTime = Math.floor(clientTimeData.getTime() / 1000);
+    var clientOffset = clientTimeData.getTimezoneOffset() * 60;
+    var diff = exist(window.serverTime) && exist(window.serverOffset) ? (window.serverTime - clientTime + window.serverOffset + clientOffset) * 1000 : null;
+    var firstTime = diff !== null ? new Date(clientTimeData.getTime() + diff) : null;
+    //if (debug) console.debug('time', DOM._GetFirstNodeTextContent("//div[@id='servertime']", null), window.serverTime, window.serverOffset, clientTimeData, clientTime, clientOffset, diff, firstTime);
     return {
       /* données du serveur */
-      _Time: function()
-      {
-        return gameTime;
+      _Time: function () {
+        return firstTime;
+      },
+      _upTime: function () {
+        return (diff !== null ? new Date(Date.now() + diff) : null);
       },
       /* données du joueur */
       _PlayerName: function()
@@ -485,13 +485,12 @@
             else if (qsDo == "tatoo") p = "pTatoo";
           }
           // Préparer une embuscade
-          else if (qsA == "ambush")
-          {
+          else if (qsA === "ambush") {
             var qsOpt = DOM._QueryString("opt");
-            if (qsOpt == null || qsOpt == "atk") p = "pAmbushAtk";
-            else if (qsOpt == "spy") p = "pAmbushSpy";
-            else if (qsOpt == "main") p = "pAmbushMain";
-            else if (qsOpt == "ambush") p = "pAmbush";
+            if (qsOpt === null || qsOpt === "main") p = "pAmbushMain";
+            else if (qsOpt === "spy") p = "pAmbushSpy";
+            else if (qsOpt === "atk") p = "pAmbushAtk";
+            else if (qsOpt === "ambush") p = "pAmbush";
           }
           // Quêtes
           else if (qsA == "quest")
@@ -599,8 +598,8 @@
       },
       _Get: function(key)
       {
-        if (_Exist(prefs[key])) return prefs[key];
-        else if (_Exist(defPrefs[key])) return defPrefs[key];
+        if (exist(prefs[key])) return prefs[key];
+        else if (exist(defPrefs[key])) return defPrefs[key];
         else return null;
       },
       _Set: function(key, v)
@@ -879,8 +878,9 @@
   }
   function updateLogS(player, msgId, msgTime, spyInfo)
   {
-    msgTime = (_Type(msgTime) == 'Date') ? msgTime.getTime() : null;
-    if (_Exist(list[player]))
+if (debug) console.debug('BWSD new ', player, msgId, msgTime, spyInfo);
+    msgTime = (msgTime instanceof Date) ? msgTime.getTime() : null;
+    if (exist(list[player]))
     {
       if (msgId != list[player][0])
       {
@@ -904,7 +904,7 @@
     var p = DATAS._GetPage(),
       player = DATAS._PlayerName(),
       IDs = LS._GetVar('BWSD:IDS', {});
-    if (debug) console.debug('BWSDstart: ', player, IDs, p);
+if (debug) console.debug('BWSDstart: ', player, IDs, p);
     // Pages gérées par le script
     if (['null', 'pShowProfile', 'pShowMsg', 'pShowOther', 'pShowItems', 'pServerDeco', 'pServerUpdate', 'pServerOther'].indexOf(p) == -1 && player !== null)
     {
@@ -915,7 +915,7 @@
         if (r !== null)
         {
           var r2 = /r\.php\?r=([0-9]+)/.exec(r),
-            ID = _Exist(r2[1]) ? r2[1] : null;
+            ID = exist(r2[1]) ? r2[1] : null;
           if (ID !== null)
           {
             for (var i in IDs)
@@ -928,7 +928,7 @@
         }
       }
       // Autre pages nécessitant l'ID
-      if (_Exist(IDs[player]))
+      if (exist(IDs[player]))
       {
         var ID = IDs[player],
           list = LS._GetVar('BWSD:LIST:' + ID, {});

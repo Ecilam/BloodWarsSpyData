@@ -1,20 +1,24 @@
 // coding: utf-8 (sans BOM)
 // ==UserScript==
-// @author      Ecilam
 // @name        Blood Wars Spy Data
-// @version     2020.09.02
+// @author      Ecilam
+// @version     2022.11.28
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
-// @copyright   2012-2019, Ecilam
 // @license     GPL version 3 ou suivantes; http://www.gnu.org/copyleft/gpl.html
 // @homepageURL https://github.com/Ecilam/BloodWarsSpyData
 // @supportURL  https://github.com/Ecilam/BloodWarsSpyData/issues
+// @match       https://*.bloodwars.net/*
+// @match       https://*.bloodwars.interia.pl/*
+// @grant       none
+// ==/UserScript==
+
+// Include remplacé par Match suite préconisation
 // @include     /^https:\/\/r[0-9]*\.fr\.bloodwars\.net\/.*$/
 // @include     /^https:\/\/r[0-9]*\.bloodwars\.net\/.*$/
 // @include     /^https:\/\/r[0-9]*\.bloodwars\.interia\.pl\/.*$/
 // @include     /^https:\/\/beta[0-9]*\.bloodwars\.net\/.*$/
-// @grant       none
-// ==/UserScript==
+
 (function()
 {
   "use strict";

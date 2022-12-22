@@ -2,7 +2,7 @@
 // ==UserScript==
 // @name        Blood Wars Spy Data
 // @author      Ecilam
-// @version     2022.11.28
+// @version     2022.12.22
 // @namespace   BWSD
 // @description Mémorise ressources et bâtiments de vos espionnages
 // @license     GPL version 3 ou suivantes; http://www.gnu.org/copyleft/gpl.html
@@ -315,7 +315,10 @@
 				"Szansa na pozostanie niewykrytym: <b>([^<>]+) %</b>"],
       "sSpyOk": ["<b>Tes espions sont revenus inaperçus.<\\/b>",
 				"<b>Your spies returned undetected.<\\/b>",
-				"<b>Twoi szpiedzy powrócili niewykryci.<\\/b>"],
+				"<b>Twoi szpiedzy powrócili niewykryci.<\\/b>"],   
+      "sAnalyse": ["Message à analyser",
+				"Message to analyze",
+				"Wiadomość do analizy"],
       "sSpyMoney": ["Argent: <b>([0-9 ]+) LOL</b>", "Money: <b>([0-9 ]+) Lgo</b>", "Pieniądze: <b>([0-9 ]+) PLN</b>"],
       "sSpyPop": ["Population: <b>([0-9 ]+)<\\/b>", "People: <b>([0-9 ]+)<\\/b>", "Ludzie: <b>([0-9 ]+)<\\/b>"],
       "sSpyBlood": ["Sang: <b>([0-9 ]+)<\\/b>", "Blood: <b>([0-9 ]+)<\\/b>", "Krew: <b>([0-9 ]+)<\\/b>"],
@@ -376,8 +379,8 @@
       /* données du joueur */
       _PlayerName: function()
       {
-        return DOM._GetFirstNodeTextContent("//div[@class='stats-player']/a[@class='me']", null);
-      },
+        return DOM._GetFirstNodeTextContent("//div[@class='stats-player']/a[@class='me'] | //div[@class='character']/a[@class='nickNameStats']", null);
+       },
       /* Données diverses	*/
       _GetPage: function()
       {
@@ -658,7 +661,7 @@
 		".BWSDbl,.BWSDhl{text-align:left;white-space: nowrap;}",
 		".BWSDbr,.BWSDhr{text-align:right;}",
 		".BWSDhl,.BWSDDel{font-weight: bold;cursor: pointer;padding: 0 3px;}",
-		".BWSDbl,.BWSDbr,.BWSDDel{border-right:0;border-left:0;border-top:thin solid black;border-bottom:thin solid black;padding: 0 3px;color: black;}",
+		".BWSDbl,.BWSDbr,.BWSDDel{border-right:0;border-left:0;border-top:thin solid black;border-bottom:thin solid black;padding: 0 3px;}",//color: black;
 		".BWSDDel{text-align:center;border:thin solid black;width:3em;color:white;background-color:red}",
 		".BWSDBut,.BWSDButError{height:10px;margin:2px 0px;}",
 		".BWSDButError{background-color:red;}"],
@@ -839,6 +842,7 @@
         return x < y ? -1 : x == y ? 0 : 1;
       });
       if (tri[1] === 0) list2.reverse();
+      // Affichage entête du tableau
       var col = set[3 + set[2]].col,
         titles = set[2] === 0 ? L._Get('sHead1') : L._Get('sHead2'),
         tr2 = IU._CreateElement('tr', { 'class': 'tblheader' }, [], {}, nodesIU.theadS);
@@ -857,17 +861,29 @@
       }
       IU._CreateElement('th', { 'class': 'BWSDDel' }, [L._Get('sRAZ')], { 'click': [spyRAZ] }, tr2);
       DOM._CleanNode(nodesIU.tbodyS);
-      for (var i = 0;
-        (i < list2.length && i < (set[1] === '' ? list2.length : set[1])); i++)
+      // Affichage des lignes du tableau
+      for (var i = 0; (i < list2.length && i < (set[1] === '' ? list2.length : set[1])); i++)
       {
-        var tr = IU._CreateElement('tr', { 'style': 'background-color:' + (list2[i][0] == 1 ? 'Green' : list2[i][0] == -1 ? 'Red' : 'white') }, [], {}, nodesIU.tbodyS);
+if (debug) console.debug('BWSD list2[i] set[2] : ', list2[i], set[2]);
+        var tr = IU._CreateElement('tr', { 'class': (i % 2 == 1 ? 'even' : '') }, [], {}, nodesIU.tbodyS);
         for (var j = 0; j < col.length; j++)
         {
           if (col[j][1] == 1)
           {
-            var v = col[j][0] === 0 ? (new Date(list2[i][2][0])).toLocaleDateString() : col[j][0] == 1 ? '' : list2[i][2][col[j][0]],
-              td = IU._CreateElement('td', { 'class': 'BWSDbl' }, [v], {}, tr);
-            if (col[j][0] == 1) list2[i][1] !== null ? IU._CreateElement('a', { 'href': '?a=profile&uid=' + list2[i][1] }, [list2[i][2][1]], {}, td) : IU._CreateElement('span', {}, [list2[i][2][1]], {}, td);
+            var v = col[j][0] === 0 ? (new Date(list2[i][2][0])).toLocaleDateString() : col[j][0] == 1 ? '' : col[j][0] == 2 && list2[i][0] == 0 ? L._Get('sAnalyse') : list2[i][2][col[j][0]];
+            if (set[2] === 0 && col[j][0] == 2 && list2[i][0] !== 0){
+              IU._CreateElements(
+              {
+                'td': ['td', { 'class': 'BWSDbl verticalAlignMiddle' }, [], {}, tr],
+                'div': ['td', {}, [], {}, 'td'], 
+                'img': ['img', { 'src': (list2[i][0] === 1 ? "gfx/common/premium/srv_active.png" : "gfx/common/premium/srv_inactive.png"), 'class': "verticalAlignMiddle" }, [], {}, 'div'],
+                'span': ['span', { 'class': "verticalAlignMiddle" }, [v], {}, 'div'],
+              });
+            }
+            else {
+              var td = IU._CreateElement('td', { 'class': 'BWSDbl verticalAlignMiddle' }, [v], {}, tr);
+              if (col[j][0] == 1) list2[i][1] !== null ? IU._CreateElement('a', { 'href': '?a=profile&uid=' + list2[i][1] }, [list2[i][2][1]], {}, td) : IU._CreateElement('span', {}, [list2[i][2][1]], {}, td);
+            }
           }
         }
         IU._CreateElement('td', { 'class': 'BWSDDel' }, ['X'], { 'click': [spyDel, list2[i][2][1]] }, tr);
@@ -974,7 +990,7 @@ if (debug) console.debug('BWSDstart: ', player, IDs, p);
         var nodeOptions = DOM._GetFirstNode("//div[@class='remark']"),
           contentMid = DOM._GetFirstNode("//div[@id='content-mid']"),
           contentMidChild = DOM._GetFirstNode("//div[@id='content-mid']/*");
-        if (nodeOptions !== null && contentMidChild !== null)
+        if (nodeOptions !== null && contentMid !== null&& contentMidChild !== null)
         {
           var nodeTitle = IU._CreateElements(
           {
@@ -997,78 +1013,78 @@ if (debug) console.debug('BWSDstart: ', player, IDs, p);
             'br': ['br', {}, [], {}, 'divIU']
           });
           contentMid.insertBefore(nodesIU.divIU, contentMidChild);
-        }
-        if (p == 'pMsgList' || p == 'pMsgSaveList')
-        {
-          var ttable = document.getElementById('messagesTable');
-          if (ttable !== null)
+          if (p == 'pMsgList' || p == 'pMsgSaveList')
           {
-            var tbody = DOM._GetFirstNode('./tbody', ttable);
-            if (tbody !== null)
+            var ttable = document.getElementById('messagesTable');
+            if (ttable !== null)
             {
-              observerList();
-              var observer = new MutationObserver(observerList);
-              observer.observe(tbody, { childList: true, attributes: true, subtree: true });
+              var tbody = DOM._GetFirstNode('./tbody', ttable);
+              if (tbody !== null)
+              {
+                observerList();
+                var observer = new MutationObserver(observerList);
+                observer.observe(tbody, { childList: true, attributes: true, subtree: true });
+              }
             }
           }
-        }
-        else if (p == 'pMsg' || p == 'pMsgSave')
-        {
-          var t = DOM._GetFirstNodeInnerHTML("//div[@class='msg-content']", null);
-          if (t !== null)
+          else if (p == 'pMsg' || p == 'pMsgSave')
           {
-            var r = new RegExp(L._Get('sSpyTargetIUD')).exec(t); // uid cible
-            if (r !== null)
+            var t = DOM._GetFirstNodeInnerHTML("//div[@class='msg-content']", null);
+            if (t !== null)
             {
-              var spyInfo = [0, r[1], [], [], []], //[type,iud,result,res,bat]
-                r1 = new RegExp(L._Get('sSpyZone')).exec(t), // zone
-                r2 = new RegExp(L._Get('sSpyNbspy')).exec(t), // espions
-                r3 = new RegExp(L._Get('sSpyChance')).exec(t), // % réussite
-                r4 = new RegExp(L._Get('sSpyOk')).exec(t), // réussite
-                r5 = new RegExp(L._Get('sSpyMoney')).exec(t), // Argent
-                r6 = new RegExp(L._Get('sSpyPop')).exec(t), // Population
-                r7 = new RegExp(L._Get('sSpyBlood')).exec(t), // Sang
-                r8 = new RegExp(L._Get('sSpyBats')).exec(t), // batiments ?
-                qsMid = DOM._QueryString("mid");
-              if (r1 !== null) { spyInfo[2][0] = r1[3].replace(/ /g, ''); }
-              if (r2 !== null) { spyInfo[2][1] = Number(r2[1]); }
-              if (r3 !== null) { spyInfo[2][2] = r3[1]; }
-              spyInfo[0] = r4 !== null ? 1 : -1;
-              if (r5 !== null) { spyInfo[3][0] = r5[1]; }
-              if (r6 !== null) { spyInfo[3][1] = r6[1]; }
-              if (r7 !== null) { spyInfo[3][2] = r7[1]; }
-              if (r8 !== null)
+              var r = new RegExp(L._Get('sSpyTargetIUD')).exec(t); // uid cible
+              if (r !== null)
               {
-                for (var i = 0; i < L._Get('sBats').length; i++)
+                var spyInfo = [0, r[1], [], [], []], //[type,iud,result,res,bat]
+                  r1 = new RegExp(L._Get('sSpyZone')).exec(t), // zone
+                  r2 = new RegExp(L._Get('sSpyNbspy')).exec(t), // espions
+                  r3 = new RegExp(L._Get('sSpyChance')).exec(t), // % réussite
+                  r4 = new RegExp(L._Get('sSpyOk')).exec(t), // réussite
+                  r5 = new RegExp(L._Get('sSpyMoney')).exec(t), // Argent
+                  r6 = new RegExp(L._Get('sSpyPop')).exec(t), // Population
+                  r7 = new RegExp(L._Get('sSpyBlood')).exec(t), // Sang
+                  r8 = new RegExp(L._Get('sSpyBats')).exec(t), // batiments ?
+                  qsMid = DOM._QueryString("mid");
+                if (r1 !== null) { spyInfo[2][0] = r1[3].replace(/ /g, ''); }
+                if (r2 !== null) { spyInfo[2][1] = Number(r2[1]); }
+                if (r3 !== null) { spyInfo[2][2] = r3[1]; }
+                spyInfo[0] = r4 !== null || r3 === null ? 1 : -1;
+                if (r5 !== null) { spyInfo[3][0] = r5[1]; }
+                if (r6 !== null) { spyInfo[3][1] = r6[1]; }
+                if (r7 !== null) { spyInfo[3][2] = r7[1]; }
+                if (r8 !== null)
                 {
-                  var bats = new RegExp(L._Get('sSpyBat', L._Get('sBats')[i])).exec(t);
-                  spyInfo[4][i] = bats !== null ? Number(bats[1]) : 0;
+                  for (var i = 0; i < L._Get('sBats').length; i++)
+                  {
+                    var bats = new RegExp(L._Get('sSpyBat', L._Get('sBats')[i])).exec(t);
+                    spyInfo[4][i] = bats !== null ? Number(bats[1]) : 0;
+                  }
+                }
+                updateLogS(r[2], qsMid, null, spyInfo);
+              }
+            }
+          }
+          else if (p == 'pAmbushMain')
+          {
+            var spyaction = DOM._GetNodes("//div[@id='content-mid']//tr/td/span[@class='spyinprogress']");
+            for (var i = 0; i < spyaction.snapshotLength; i++)
+            {
+              var node = spyaction.snapshotItem(i),
+                spyId = node.getAttribute('id'),
+                spyScript = DOM._GetFirstNodeInnerHTML("./parent::td/script", null, node);
+              if (spyScript !== null)
+              {
+                var r = new RegExp(L._Get('sSpyScript', spyId)).exec(spyScript),
+                  playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']", null, node);
+                if (DATAS._Time() !== null && r !== null && playerVS !== null)
+                {
+                  updateLogS(playerVS, r[2], new Date(DATAS._Time().getTime() + Number(r[1]) * 1000), null);
                 }
               }
-              updateLogS(r[2], qsMid, null, spyInfo);
             }
           }
+          updateTable();
         }
-        else if (p == 'pAmbushMain')
-        {
-          var spyaction = DOM._GetNodes("//div[@id='content-mid']//tr/td/span[@class='spyinprogress']");
-          for (var i = 0; i < spyaction.snapshotLength; i++)
-          {
-            var node = spyaction.snapshotItem(i),
-              spyId = node.getAttribute('id'),
-              spyScript = DOM._GetFirstNodeInnerHTML("./parent::td/script", null, node);
-            if (spyScript !== null)
-            {
-              var r = new RegExp(L._Get('sSpyScript', spyId)).exec(spyScript),
-                playerVS = DOM._GetFirstNodeTextContent("./parent::td/parent::tr/td/a[@class='players']", null, node);
-              if (DATAS._Time() !== null && r !== null && playerVS !== null)
-              {
-                updateLogS(playerVS, r[2], new Date(DATAS._Time().getTime() + Number(r[1]) * 1000), null);
-              }
-            }
-          }
-        }
-        updateTable();
       }
       else alert(L._Get("sUnknowID"));
     }
